@@ -138,6 +138,23 @@ create policy "Hosts can view bookings for their listings" on public.bookings
 create policy "Users can update own bookings" on public.bookings
   for update using (auth.uid() = user_id);
 
+-- RLS POLICIES FOR AVAILABILITY
+alter table public.availability enable row level security;
+
+-- Public can view all availability
+create policy "Availability is public" on public.availability
+  for select using (true);
+
+-- Hosts can insert/update/delete availability for their own listings
+create policy "Hosts can manage availability" on public.availability
+  for all using (
+    exists (
+      select 1 from public.listings
+      where listings.id = availability.listing_id
+      and listings.host_id = auth.uid()
+    )
+  );
+
 -- TRIGGER (Handle New User)
 -- This triggers when a new user signs up via Supabase Auth.
 create or replace function public.handle_new_user()
