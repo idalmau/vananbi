@@ -72,13 +72,13 @@ export function BookingList({ bookings }: { bookings: Booking[] }) {
                                 <div className="flex justify-between items-start mb-2">
                                     <h3 className="font-semibold text-gray-900 dark:text-white line-clamp-1">{booking.listing.title}</h3>
                                     <span className={`px-2 py-1 text-xs font-medium rounded-full ${booking.status === 'confirmed' ? 'bg-green-100 text-green-700' :
-                                            booking.status === 'cancelled' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'
+                                        booking.status === 'cancelled' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'
                                         }`}>
                                         {booking.status === 'confirmed' ? 'Confirmado' : booking.status === 'cancelled' ? 'Cancelado' : 'Pendiente'}
                                     </span>
                                 </div>
                                 <p className="text-sm text-gray-500 mb-4">
-                                    {new Date(booking.start_date).toLocaleDateString()} - {new Date(booking.end_date).toLocaleDateString()}
+                                    {new Date(booking.start_date).toLocaleDateString('es-ES')} - {new Date(booking.end_date).toLocaleDateString('es-ES')}
                                 </p>
                                 <div className="flex gap-2 items-center">
                                     <Link
