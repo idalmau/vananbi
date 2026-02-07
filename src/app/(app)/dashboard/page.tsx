@@ -6,6 +6,7 @@ import { createClient } from '@/shared/lib/supabase/server'
 import { getUserBookings, getHostBookings } from '@/modules/booking/service'
 import { getHostListings } from '@/modules/listings/service'
 import { BookingList } from '@/modules/booking/components/BookingList'
+import { BookingActions } from '@/modules/booking/components/BookingActions'
 
 export default async function DashboardPage() {
     const supabase = await createClient()
@@ -109,6 +110,9 @@ export default async function DashboardPage() {
                                                                 <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
                                                                     {res.status}
                                                                 </span>
+                                                                <div className="mt-2">
+                                                                    <BookingActions bookingId={res.id} status={res.status} />
+                                                                </div>
                                                             </td>
                                                         </tr>
                                                     ))}

@@ -99,13 +99,26 @@ export async function createBooking(formData: FormData) {
         start_date: startDate,
         end_date: endDate,
         total_price: totalPrice,
-        status: 'confirmed', // Confirmed immediately for MVP Mock
+        status: 'pending', // Pending host approval
         payment_intent_id: payment.id // Storing the mock ID
     }).select().single()
 
     if (error) {
         console.error('Booking error:', error)
         return { error: 'Error al procesar la reserva.' }
+    }
+
+    // Record Payment
+    const { error: paymentError } = await supabase.from('payments').insert({
+        booking_id: data.id,
+        amount: totalPrice,
+        status: 'succeeded',
+        stripe_payment_id: payment.id
+    })
+
+    if (paymentError) {
+        console.error('Error recording payment:', paymentError)
+        // In a real app, we might want to flag this for manual review
     }
 
     revalidatePath('/dashboard')
@@ -149,6 +162,111 @@ export async function cancelBooking(bookingId: string) {
     if (error) {
         return { error: 'Error al cancelar la reserva.' }
     }
+
+    revalidatePath('/dashboard')
+    return { success: true }
+}
+
+export async function confirmBooking(bookingId: string) {
+    const supabase = await createClient()
+
+    // Authenticate
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
+        return { error: 'Debes iniciar sesión.' }
+    }
+
+    // Verify Is Host of the listing
+    // We need to join bookings -> listings to check host_id
+    const { data: booking, error: fetchError } = await supabase
+        .from('bookings')
+        .select(`
+            *,
+            listing:listings (
+                host_id
+            )
+        `)
+        .eq('id', bookingId)
+        .single()
+
+    if (fetchError || !booking) {
+        return { error: 'Reserva no encontrada.' }
+    }
+
+    // Check if user is the host
+    // @ts-ignore - Supabase types inference might be tricky with nested joins sometimes
+    if (booking.listing.host_id !== user.id) {
+        return { error: 'No tienes permiso para gestionar esta reserva.' }
+    }
+
+    if (booking.status !== 'pending') {
+        return { error: 'Esta reserva no está pendiente.' }
+    }
+
+    // Update status
+    const { error } = await supabase
+        .from('bookings')
+        .update({ status: 'confirmed' })
+        .eq('id', bookingId)
+
+    if (error) {
+        return { error: 'Error al confirmar la reserva.' }
+    }
+
+    // Create Payment (If we moved payment creation here, but we already created it as pending/succeeded in createBooking? 
+    // In current flow: payment is already in 'payments' table as 'succeeded' (mock).
+    // In a real flow, we would Capture the payment here.
+    // For MVP, we just update status.
+
+    revalidatePath('/dashboard')
+    return { success: true }
+}
+
+export async function rejectBooking(bookingId: string) {
+    const supabase = await createClient()
+
+    // Authenticate
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
+        return { error: 'Debes iniciar sesión.' }
+    }
+
+    // Verify Is Host
+    const { data: booking, error: fetchError } = await supabase
+        .from('bookings')
+        .select(`
+            *,
+            listing:listings (
+                host_id
+            )
+        `)
+        .eq('id', bookingId)
+        .single()
+
+    if (fetchError || !booking) {
+        return { error: 'Reserva no encontrada.' }
+    }
+
+    // @ts-ignore
+    if (booking.listing.host_id !== user.id) {
+        return { error: 'No tienes permiso para gestionar esta reserva.' }
+    }
+
+    if (booking.status !== 'pending') {
+        return { error: 'Esta reserva no está pendiente.' }
+    }
+
+    // Update status
+    const { error } = await supabase
+        .from('bookings')
+        .update({ status: 'cancelled' })
+        .eq('id', bookingId)
+
+    if (error) {
+        return { error: 'Error al rechazar la reserva.' }
+    }
+
+    // TODO: Trigger Refund if payment was captured.
 
     revalidatePath('/dashboard')
     return { success: true }

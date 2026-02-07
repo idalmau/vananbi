@@ -65,7 +65,7 @@ export default async function BookingSuccessPage({ searchParams }: { searchParam
                         href="/search"
                         className="block w-full py-3 px-4 text-gray-700 font-medium hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-zinc-800 rounded-lg transition-colors"
                     >
-                        Buscar más pernoctas
+                        Buscar más vans
                     </Link>
                 </div>
             </div>
