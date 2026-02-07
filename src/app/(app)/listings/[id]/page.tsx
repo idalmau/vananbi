@@ -1,15 +1,15 @@
 import Image from 'next/image'
 import { notFound } from 'next/navigation'
-import { getListingById } from '@/modules/listings/service'
+import { getListingById, getListingAvailability } from '@/modules/listings/service'
 import { createClient } from '@/shared/lib/supabase/server'
 import { BookingForm } from '@/modules/booking/components/BookingForm'
-import { getListingBookings, getUserBookings } from '@/modules/booking/service'
+import { getUserBookings } from '@/modules/booking/service'
 
 export default async function ListingPage({ params, searchParams }: { params: Promise<{ id: string }>, searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
     const { id } = await params
     const { startDate, endDate } = await searchParams
     const listing = await getListingById(id)
-    const bookedDates = await getListingBookings(id)
+    const bookedDates = await getListingAvailability(id)
 
     if (!listing) {
         notFound()

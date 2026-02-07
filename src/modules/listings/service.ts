@@ -111,3 +111,52 @@ export async function getHostListings(hostId: string): Promise<Listing[]> {
 
     return data as Listing[]
 }
+
+export async function getListingAvailability(listingId: string): Promise<{ start_date: string, end_date: string }[]> {
+    const supabase = await createClient()
+
+    // 1. Get Bookings (Confirmed or Pending)
+    const { data: bookings, error: bookingsError } = await supabase
+        .from('bookings')
+        .select('start_date, end_date')
+        .eq('listing_id', listingId)
+        .in('status', ['confirmed', 'pending'])
+        .gte('end_date', new Date().toISOString())
+
+    if (bookingsError) {
+        console.error('Error fetching bookings for availability:', bookingsError)
+    }
+
+    // 2. Get Host Blocks (Availability Table)
+    // Note: For MVP, we're primarily relying on bookings, but we fetch this to be future-proof
+    // as per the user's request. Supabase returns daterange as string "[2024-01-01,2024-01-05)"
+    const { data: blocks, error: blocksError } = await supabase
+        .from('availability')
+        .select('date_range')
+        .eq('listing_id', listingId)
+
+    if (blocksError) {
+        console.error('Error fetching availability blocks:', blocksError)
+    }
+
+    const bookingRanges = (bookings || []).map(b => ({
+        start_date: b.start_date,
+        end_date: b.end_date
+    }))
+
+    // Parse daterange strings if any
+    const blockRanges = (blocks || []).map((b: any) => {
+        // Simple regex to parse "[start,end)"
+        // Example: "[2026-02-20,2026-02-25)"
+        const match = b.date_range.match(/\[(.*?),(.*?)\)/)
+        if (match) {
+            return {
+                start_date: match[1],
+                end_date: match[2]
+            }
+        }
+        return null
+    }).filter(Boolean) as { start_date: string, end_date: string }[]
+
+    return [...bookingRanges, ...blockRanges]
+}
