@@ -1,10 +1,13 @@
-
 'use client'
 
 import { useActionState, useState, useEffect } from 'react'
-import { createBooking } from '@/modules/booking/actions' // Correction: need to ensure path is correct
+import { createBooking } from '@/modules/booking/actions'
 import { Listing } from '@/modules/listings/types'
 import { cn } from '@/shared/lib/utils'
+import { DayPicker, DateRange } from 'react-day-picker'
+import { es } from 'date-fns/locale'
+import 'react-day-picker/dist/style.css'
+import { differenceInCalendarDays, format } from 'date-fns'
 
 interface BookingFormProps {
     listing: Listing
@@ -28,12 +31,25 @@ export function BookingForm({
     initialEndDate?: string,
     userBookings?: any[]
 }) {
-    // Simple Date State (YYYY-MM-DD)
-    const [startDate, setStartDate] = useState(initialStartDate)
-    const [endDate, setEndDate] = useState(initialEndDate)
+    // Range State
+    const [range, setRange] = useState<DateRange | undefined>(() => {
+        if (initialStartDate && initialEndDate) {
+            return {
+                from: new Date(initialStartDate),
+                to: new Date(initialEndDate)
+            }
+        }
+        return undefined
+    })
+
     const [totalPrice, setTotalPrice] = useState<number | null>(null)
     const [dateError, setDateError] = useState('')
-    const [overlapWarning, setOverlapWarning] = useState('')
+
+    // Derived values for form submission (hidden inputs) (YYYY-MM-DD)
+    const startDateStr = range?.from ? format(range.from, 'yyyy-MM-dd') : ''
+    // If range.to is undefined (single day selection), we might default to same day or wait. 
+    // Logic: require both dates.
+    const endDateStr = range?.to ? format(range.to, 'yyyy-MM-dd') : ''
 
     const [state, formAction, isPending] = useActionState(async (prev: any, formData: FormData) => {
         return createBooking(formData)
@@ -43,104 +59,56 @@ export function BookingForm({
     const getLoginParams = () => {
         const nextPath = `/listings/${listing.id}`
         const params = new URLSearchParams()
-        if (startDate) params.set('startDate', startDate)
-        if (endDate) params.set('endDate', endDate)
+        if (startDateStr) params.set('startDate', startDateStr)
+        if (endDateStr) params.set('endDate', endDateStr)
 
         const fullNextPath = params.toString() ? `${nextPath}?${params.toString()}` : nextPath
         return `/login?next=${encodeURIComponent(fullNextPath)}`
     }
 
-    // Helper to check if a range overlaps with booked dates
-    const checkOverlap = (start: string, end: string) => {
-        if (!bookedDates.length) return false
-        return bookedDates.some(booking => {
-            const bStart = booking.start_date
-            const bEnd = booking.end_date
-            // Basic string comparison works for ISO dates (YYYY-MM-DD)
-            // Overlap logic: (StartA < EndB) and (EndA > StartB)
-            return start < bEnd && end > bStart
-        })
-    }
+    // Convert bookedDates to Date objects (inclusive ranges)
+    const disabledDays = bookedDates.map(b => ({
+        from: new Date(b.start_date),
+        to: new Date(b.end_date)
+    }))
 
-    // Helper to check if range overlaps with OWN bookings
-    const checkSelfOverlap = (start: string, end: string) => {
-        if (!userBookings?.length) return null
-        return userBookings.find(booking => {
-            // Skip cancelled
-            if (booking.status === 'cancelled') return false
-            const bStart = booking.start_date
-            const bEnd = booking.end_date
-            return start < bEnd && end > bStart
-        })
-    }
+    // Add "Before Today" to disabled
+    const today = new Date()
+    today.setHours(0, 0, 0, 0) // Reset time to start of day
+
+    // Also disable "Yesterday" effectively by using `before: today`
+    const disabled = [
+        ...disabledDays,
+        { before: today }
+    ]
 
     useEffect(() => {
         setDateError('')
-        setOverlapWarning('')
-        if (startDate && endDate) {
-            // Validate order
-            if (startDate > endDate) {
-                setDateError('La fecha de salida debe ser posterior a la de llegada.')
-                setTotalPrice(null)
-                return
-            }
+        setTotalPrice(null)
 
-            // Validate availability (Block)
-            if (checkOverlap(startDate, endDate)) {
-                setDateError('Estas fechas no están disponibles.')
-                setTotalPrice(null)
-                return
-            }
+        if (range?.from && range?.to) {
+            const days = differenceInCalendarDays(range.to, range.from)
 
-            // Validate Self-Overlap (Warning)
-            const overlap = checkSelfOverlap(startDate, endDate)
-            if (overlap) {
-                setOverlapWarning(`Ojo: Ya tienes una reserva en estas fechas (${overlap.listing.title}).`)
-            }
+            if (days > 0) {
+                // Check if any date inside the range is disabled
+                const isBlocked = bookedDates.some(b => {
+                    const bStart = new Date(b.start_date)
+                    const bEnd = new Date(b.end_date)
+                    // Check if booking is strictly inside the selected range
+                    return range.from! < bEnd && range.to! > bStart
+                })
 
-            const start = new Date(startDate)
-            const end = new Date(endDate)
-            const diffTime = Math.abs(end.getTime() - start.getTime())
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+                if (isBlocked) {
+                    setDateError('El rango seleccionado incluye fechas no disponibles.')
+                } else {
+                    setTotalPrice(days * listing.price_per_night)
+                }
 
-            if (diffDays > 0) {
-                setTotalPrice(diffDays * listing.price_per_night)
             } else {
                 setTotalPrice(null)
             }
-        } else {
-            setTotalPrice(null)
         }
-    }, [startDate, endDate, listing.price_per_night, userBookings])
-
-    // Get today's date for min attribute
-    const today = new Date().toISOString().split('T')[0]
-
-    // Calculate min end date (Start + 1 day)
-    const getMinEndDate = () => {
-        if (!startDate) return today
-        const start = new Date(startDate)
-        start.setDate(start.getDate() + 1)
-        return start.toISOString().split('T')[0]
-    }
-
-    // Auto-set End Date when Start Date changes
-    const handleStartDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const newStart = e.target.value
-        setStartDate(newStart)
-
-        if (newStart) {
-            const start = new Date(newStart)
-            const nextDay = new Date(start)
-            nextDay.setDate(nextDay.getDate() + 1)
-            const nextDayStr = nextDay.toISOString().split('T')[0]
-
-            // If endDate is empty or before the new start date, update it to the next day
-            if (!endDate || endDate <= newStart) {
-                setEndDate(nextDayStr)
-            }
-        }
-    }
+    }, [range, listing.price_per_night, bookedDates])
 
     return (
         <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:bg-zinc-900 dark:border-zinc-800 sticky top-24">
@@ -154,33 +122,42 @@ export function BookingForm({
             <form action={formAction} className="flex flex-col gap-4">
                 <input type="hidden" name="listingId" value={listing.id} />
                 <input type="hidden" name="pricePerNight" value={listing.price_per_night} />
+                <input type="hidden" name="startDate" value={startDateStr} />
+                <input type="hidden" name="endDate" value={endDateStr} />
 
-                <div className="grid grid-cols-2 gap-2">
-                    <div className="flex flex-col gap-1">
-                        <label className="text-xs font-bold uppercase text-gray-500">Llegada</label>
-                        <input
-                            type="date"
-                            name="startDate"
-                            min={today}
-                            required
-                            value={startDate}
-                            onChange={handleStartDateChange}
-                            className="p-2 border rounded-md text-sm border-gray-300 dark:bg-zinc-950 dark:border-zinc-700 dark:text-white"
-                        />
+                {/* Calendar Container */}
+                <div className="border rounded-xl p-4 flex justify-center bg-white dark:bg-black dark:border-zinc-800">
+                    <DayPicker
+                        mode="range"
+                        selected={range}
+                        onSelect={setRange}
+                        locale={es}
+                        disabled={disabled}
+                        min={1}
+                        className="!m-0" // Override margin
+                        modifiersClassNames={{
+                            selected: "bg-black text-white hover:bg-gray-800 dark:bg-white dark:text-black",
+                            today: "font-bold text-blue-600",
+                            disabled: "text-gray-300 opacity-50 cursor-not-allowed line-through",
+                        }}
+                        styles={{
+                            day: { borderRadius: '50%' } // Round date circles
+                        }}
+                    />
+                </div>
+
+                {/* Date Summary */}
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div className="border rounded-lg px-3 py-2 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-900">
+                        <span className="block text-xs text-gray-500 uppercase font-bold mb-1">Llegada</span>
+                        <div className="font-medium dark:text-white">{range?.from ? format(range.from, 'dd/MM/yyyy') : '-'}</div>
                     </div>
-                    <div className="flex flex-col gap-1">
-                        <label className="text-xs font-bold uppercase text-gray-500">Salida</label>
-                        <input
-                            type="date"
-                            name="endDate"
-                            min={getMinEndDate()}
-                            required
-                            value={endDate}
-                            onChange={(e) => setEndDate(e.target.value)}
-                            className="p-2 border rounded-md text-sm border-gray-300 dark:bg-zinc-950 dark:border-zinc-700 dark:text-white"
-                        />
+                    <div className="border rounded-lg px-3 py-2 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-900">
+                        <span className="block text-xs text-gray-500 uppercase font-bold mb-1">Salida</span>
+                        <div className="font-medium dark:text-white">{range?.to ? format(range.to, 'dd/MM/yyyy') : '-'}</div>
                     </div>
                 </div>
+
 
                 {totalPrice !== null && !dateError && (
                     <div className="py-4 border-t border-gray-100 dark:border-zinc-800 space-y-2">
@@ -209,13 +186,6 @@ export function BookingForm({
                     <p className="text-sm text-red-500 bg-red-50 p-2 rounded border border-red-200">{dateError}</p>
                 )}
 
-                {/* Overlap Warning */}
-                {overlapWarning && (
-                    <div className="text-sm text-yellow-700 bg-yellow-50 p-2 rounded border border-yellow-200">
-                        {overlapWarning}
-                    </div>
-                )}
-
                 {!user ? (
                     <a
                         href={getLoginParams()}
@@ -236,19 +206,6 @@ export function BookingForm({
                 )}
             </form>
             <p className="mt-4 text-center text-xs text-gray-500">No se te cobrará todavía</p>
-
-            {/* Simple Unavailability List for MVP Visibility */}
-            {bookedDates.length > 0 && (
-                <div className="mt-4 pt-4 border-t border-gray-100 dark:border-zinc-800">
-                    <p className="text-xs font-medium text-gray-500 mb-2">Fechas no disponibles:</p>
-                    <ul className="text-xs text-gray-400 space-y-1">
-                        {bookedDates.slice(0, 3).map((b, i) => (
-                            <li key={i}>{new Date(b.start_date).toLocaleDateString()} - {new Date(b.end_date).toLocaleDateString()}</li>
-                        ))}
-                        {bookedDates.length > 3 && <li>... y más fechas</li>}
-                    </ul>
-                </div>
-            )}
         </div>
     )
 }
