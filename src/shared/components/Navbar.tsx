@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { createClient } from '@/shared/lib/supabase/server'
 import { signout } from '@/modules/auth/actions'
 import { User } from 'lucide-react'
+import { UserMenu } from './UserMenu'
 
 export async function Navbar() {
     const supabase = await createClient()
@@ -56,9 +57,7 @@ export async function Navbar() {
                                     Viajes
                                 </Link>
 
-                                <Link href="/profile" className="p-2 text-gray-700 hover:text-black hover:bg-gray-100 rounded-full dark:text-gray-300 dark:hover:text-white dark:hover:bg-zinc-800 transition-colors" aria-label="Perfil de usuario">
-                                    <User className="h-5 w-5" />
-                                </Link>
+                                <UserMenu user={user} />
                             </div>
                         ) : (
                             <div className="flex items-center gap-4">
