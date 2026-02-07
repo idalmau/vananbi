@@ -66,7 +66,7 @@ create table public.bookings (
   start_date date not null,
   end_date date not null,
   total_price integer not null, -- cents
-  status text check (status in ('pending', 'confirmed', 'cancelled')) default 'pending',
+  status text check (status in ('pending', 'confirmed', 'cancelled', 'rejected')) default 'pending',
   payment_intent_id text, -- stripe
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
@@ -161,6 +161,16 @@ create policy "Hosts can view bookings for their listings" on public.bookings
 -- Users can update their own bookings (e.g., to cancel)
 create policy "Users can update own bookings" on public.bookings
   for update using (auth.uid() = user_id);
+
+-- Hosts can update bookings for their listings (e.g. confirm/reject)
+create policy "Hosts can update bookings for their listings" on public.bookings
+  for update using (
+    exists (
+      select 1 from public.listings
+      where listings.id = bookings.listing_id
+      and listings.host_id = auth.uid()
+    )
+  );
 
 -- RLS POLICIES FOR AVAILABILITY
 alter table public.availability enable row level security;
