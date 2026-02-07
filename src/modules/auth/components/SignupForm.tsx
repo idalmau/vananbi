@@ -99,7 +99,7 @@ export function SignupForm() {
                 type="submit"
                 disabled={isPending}
                 className={cn(
-                    "mt-2 w-full py-2 px-4 bg-black text-white rounded-lg font-medium hover:bg-gray-800 transition-colors disabled:opacity-50 dark:bg-white dark:text-black dark:hover:bg-gray-200",
+                    "mt-2 w-full py-2 px-4 bg-black text-white rounded-lg font-medium hover:bg-gray-800 transition-colors disabled:opacity-50 dark:bg-white dark:text-black dark:hover:bg-gray-200 active:scale-95 transition-transform",
                     isPending && "cursor-not-allowed"
                 )}
             >

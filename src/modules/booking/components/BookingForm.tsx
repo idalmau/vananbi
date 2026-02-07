@@ -219,7 +219,7 @@ export function BookingForm({
                 {!user ? (
                     <a
                         href={getLoginParams()}
-                        className="block w-full text-center rounded-lg bg-black text-white px-4 py-3 font-semibold hover:bg-gray-800 dark:bg-white dark:text-black mt-2"
+                        className="block w-full text-center rounded-lg bg-black text-white px-4 py-3 font-semibold hover:bg-gray-800 dark:bg-white dark:text-black mt-2 active:scale-95 transition-transform"
                     >
                         Iniciar sesión para reservar
                     </a>
@@ -228,7 +228,7 @@ export function BookingForm({
                         type="submit"
                         disabled={isPending || !totalPrice || !!dateError}
                         className={cn(
-                            "w-full rounded-lg bg-blue-600 px-4 py-3 text-white font-semibold hover:bg-blue-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            "w-full rounded-lg bg-blue-600 px-4 py-3 text-white font-semibold hover:bg-blue-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 transition-transform"
                         )}
                     >
                         {isPending ? 'Reservando...' : 'Reservar'}

@@ -10,7 +10,7 @@ export default async function Home() {
     <div className="flex flex-col min-h-screen">
       <main className="flex-grow">
         <div className="relative isolate pt-14 dark:bg-black">
-          <div className="mx-auto max-w-7xl px-6 py-24 sm:py-32 lg:px-8">
+          <div className="mx-auto max-w-7xl px-6 pt-4 pb-12 sm:pt-8 sm:pb-16 lg:px-8">
             <div className="mx-auto max-w-2xl text-center">
               <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl dark:text-white">
                 Encuentra estancias únicas, <span className="text-blue-600">pensadas para ti</span>.
@@ -20,16 +20,16 @@ export default async function Home() {
               </p>
               <div className="mt-10 flex items-center justify-center gap-x-6">
                 {user?.user_metadata?.role === 'host' ? (
-                  <Link href="/dashboard" className="rounded-full bg-black px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-gray-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black dark:bg-white dark:text-black dark:hover:bg-gray-200">
+                  <Link href="/dashboard" className="rounded-full bg-black px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-gray-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black dark:bg-white dark:text-black dark:hover:bg-gray-200 active:scale-95 transition-transform">
                     Ir a mis anuncios
                   </Link>
                 ) : (
-                  <Link href="/search" className="rounded-full bg-blue-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600">
+                  <Link href="/search" className="rounded-full bg-blue-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 active:scale-95 transition-transform">
                     Empezar a explorar
                   </Link>
                 )}
                 {(!user || user.user_metadata?.role !== 'host') && (
-                  <Link href="/signup?role=host" className="text-sm font-semibold leading-6 text-gray-900 dark:text-white">
+                  <Link href="/signup?role=host" className="text-sm font-semibold leading-6 text-gray-900 dark:text-white hover:text-gray-600 active:scale-95 transition-transform inline-block">
                     Conviértete en Host <span aria-hidden="true">→</span>
                   </Link>
                 )}
