@@ -26,6 +26,8 @@ create table public.listings (
   description text,
   price_per_night integer not null, -- stored in cents
   location text not null,
+  latitude double precision,
+  longitude double precision,
   image_url text, -- simplified for MVP, single image or comma-separated
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );

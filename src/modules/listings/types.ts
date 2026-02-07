@@ -6,6 +6,8 @@ export type Listing = {
     description: string | null
     price_per_night: number // in cents
     location: string
+    latitude?: number
+    longitude?: number
     image_url: string | null
     created_at: string
     host?: {
