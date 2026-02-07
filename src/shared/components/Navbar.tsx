@@ -3,6 +3,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { createClient } from '@/shared/lib/supabase/server'
 import { signout } from '@/modules/auth/actions'
+import { User } from 'lucide-react'
 
 export async function Navbar() {
     const supabase = await createClient()
@@ -40,15 +41,7 @@ export async function Navbar() {
                     </div>
 
                     <div className="flex items-center gap-4">
-                        {/* Only show "Hazte Host" if NOT a host */}
-                        {(!user || user.user_metadata?.role !== 'host') && (
-                            <Link
-                                href="/become-host"
-                                className="text-sm font-medium text-gray-700 hover:text-black dark:text-gray-300 dark:hover:text-white hidden md:block"
-                            >
-                                Hazte Host
-                            </Link>
-                        )}
+
 
                         {user ? (
                             <div className="flex items-center gap-4">
@@ -59,25 +52,20 @@ export async function Navbar() {
                                     </span>
                                 )}
 
-                                <Link href="/dashboard" className="text-sm font-medium hidden md:block hover:underline">
-                                    {user.user_metadata?.username || user.email?.split('@')[0]}
+                                <Link href="/dashboard" className="text-sm font-medium text-gray-700 hover:text-black dark:text-gray-300 dark:hover:text-white hover:underline">
+                                    Viajes
                                 </Link>
 
-                                <Link href="/dashboard" className="text-sm font-medium text-gray-700 hover:text-black dark:text-gray-300 dark:hover:text-white">
-                                    Dashboard
+                                <Link href="/profile" className="p-2 text-gray-700 hover:text-black hover:bg-gray-100 rounded-full dark:text-gray-300 dark:hover:text-white dark:hover:bg-zinc-800 transition-colors" aria-label="Perfil de usuario">
+                                    <User className="h-5 w-5" />
                                 </Link>
-                                <form action={signout}>
-                                    <button type="submit" className="text-sm font-medium text-red-600 hover:text-red-500">
-                                        Salir
-                                    </button>
-                                </form>
                             </div>
                         ) : (
                             <div className="flex items-center gap-4">
                                 <Link href="/login" className="text-sm font-medium text-gray-700 hover:text-black dark:text-gray-300 dark:hover:text-white">
                                     Iniciar sesión
                                 </Link>
-                                <Link href="/signup" className="text-sm font-medium bg-black text-white px-4 py-2 rounded-full hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200 transaction-colors">
+                                <Link href="/signup" className="text-sm font-medium bg-black text-white px-4 py-2 rounded-full hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200 transaction-colors active:scale-95 transition-transform">
                                     Regístrate
                                 </Link>
                             </div>
