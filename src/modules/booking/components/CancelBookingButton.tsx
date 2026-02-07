@@ -17,7 +17,7 @@ export function CancelBookingButton({ bookingId }: { bookingId: string }) {
             <button
                 type="submit"
                 disabled={isPending}
-                className="text-sm text-red-600 hover:text-red-800 disabled:opacity-50"
+                className="text-sm text-red-600 hover:text-red-800 disabled:opacity-50 active:scale-95 transition-transform"
             >
                 {isPending ? 'Cancelando...' : 'Cancelar'}
             </button>

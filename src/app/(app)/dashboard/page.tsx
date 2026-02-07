@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/shared/lib/supabase/server'
 import { getUserBookings, getHostBookings } from '@/modules/booking/service'
 import { getHostListings } from '@/modules/listings/service'
-import { CancelBookingButton } from '@/modules/booking/components/CancelBookingButton'
+import { BookingList } from '@/modules/booking/components/BookingList'
 
 export default async function DashboardPage() {
     const supabase = await createClient()
@@ -39,48 +39,7 @@ export default async function DashboardPage() {
                 <div className="space-y-12">
                     {/* SECTION 1: My Trips (As a Guest) */}
                     {!isHost && (
-                        <section>
-                            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Mis Viajes</h2>
-                            {myBookings.length === 0 ? (
-                                <div className="bg-white dark:bg-zinc-900 rounded-xl p-8 text-center border border-gray-200 dark:border-zinc-800">
-                                    <p className="text-gray-500 mb-4">No tienes viajes planeados todavía.</p>
-                                    <Link href="/search" className="text-blue-600 font-medium hover:underline">Buscar una van</Link>
-                                </div>
-                            ) : (
-                                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                                    {myBookings.map((booking: any) => (
-                                        <div key={booking.id} className="bg-white dark:bg-zinc-900 rounded-xl overflow-hidden shadow-sm border border-gray-200 dark:border-zinc-800 group hover:shadow-md transition-shadow">
-                                            <div className="relative h-40 bg-gray-200">
-                                                {booking.listing.image_url ? (
-                                                    <Image src={booking.listing.image_url} alt={booking.listing.title} fill className="object-cover" />
-                                                ) : (
-                                                    <div className="flex items-center justify-center h-full text-gray-400">Sin Imagen</div>
-                                                )}
-                                            </div>
-                                            <div className="p-4">
-                                                <div className="flex justify-between items-start mb-2">
-                                                    <h3 className="font-semibold text-gray-900 dark:text-white line-clamp-1">{booking.listing.title}</h3>
-                                                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${booking.status === 'confirmed' ? 'bg-green-100 text-green-700' :
-                                                        booking.status === 'cancelled' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'
-                                                        }`}>
-                                                        {booking.status === 'confirmed' ? 'Confirmado' : booking.status === 'cancelled' ? 'Cancelado' : 'Pendiente'}
-                                                    </span>
-                                                </div>
-                                                <p className="text-sm text-gray-500 mb-4">{new Date(booking.start_date).toLocaleDateString()} - {new Date(booking.end_date).toLocaleDateString()}</p>
-                                                <div className="flex gap-2 items-center">
-                                                    <Link href={`/bookings/success?id=${booking.id}`} className="flex-1 text-center text-sm border border-gray-300 rounded-lg py-2 hover:bg-gray-50 dark:border-zinc-700 dark:hover:bg-zinc-800">
-                                                        Ver Detalles
-                                                    </Link>
-                                                    {booking.status !== 'cancelled' && (
-                                                        <CancelBookingButton bookingId={booking.id} />
-                                                    )}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </section>
+                        <BookingList bookings={myBookings} />
                     )}
 
                     {/* SECTION 2: HOST AREA */}
