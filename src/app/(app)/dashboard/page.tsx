@@ -3,9 +3,8 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/shared/lib/supabase/server'
-import { getUserBookings, getHostBookings } from '@/modules/booking/service'
+import { getHostBookings } from '@/modules/booking/service'
 import { getHostListings } from '@/modules/listings/service'
-import { BookingList } from '@/modules/booking/components/BookingList'
 import { BookingActions } from '@/modules/booking/components/BookingActions'
 
 export default async function DashboardPage() {
@@ -18,7 +17,6 @@ export default async function DashboardPage() {
 
     const isHost = user.user_metadata?.role === 'host'
 
-    const myBookings = await getUserBookings(user.id)
     const hostListings = isHost ? await getHostListings(user.id) : []
     const hostReservations = isHost ? await getHostBookings(user.id) : []
 
@@ -38,13 +36,8 @@ export default async function DashboardPage() {
                 </div>
 
                 <div className="space-y-12">
-                    {/* SECTION 1: My Trips (As a Guest) */}
-                    {!isHost && (
-                        <BookingList bookings={myBookings} />
-                    )}
-
-                    {/* SECTION 2: HOST AREA */}
-                    {isHost && (
+                    {/* HOST AREA ONLY */}
+                    {isHost ? (
                         <>
                             <section>
                                 <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Mis Anuncios</h2>
@@ -107,8 +100,15 @@ export default async function DashboardPage() {
                                                                 {new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(res.total_price / 100)}
                                                             </td>
                                                             <td className="px-6 py-4 whitespace-nowrap">
-                                                                <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                                                                    {res.status}
+                                                                <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                                                    ${res.status === 'confirmed' ? 'bg-green-100 text-green-800' :
+                                                                        res.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                                                                            res.status === 'cancelled' ? 'bg-gray-100 text-gray-800' :
+                                                                                'bg-yellow-100 text-yellow-800'}`}>
+                                                                    {res.status === 'confirmed' ? 'Confirmada' :
+                                                                        res.status === 'rejected' ? 'Rechazada' :
+                                                                            res.status === 'cancelled' ? 'Cancelada' :
+                                                                                'Pendiente'}
                                                                 </span>
                                                                 <div className="mt-2">
                                                                     <BookingActions bookingId={res.id} status={res.status} />
@@ -123,6 +123,11 @@ export default async function DashboardPage() {
                                 )}
                             </section>
                         </>
+                    ) : (
+                        <div className="bg-white dark:bg-zinc-900 rounded-xl p-8 text-center border border-gray-200 dark:border-zinc-800">
+                            <p className="text-gray-500">No tienes acceso al panel de host.</p>
+                            <Link href="/trips" className="text-blue-600 hover:underline mt-2 inline-block">Ver mis viajes</Link>
+                        </div>
                     )}
                 </div>
             </div>

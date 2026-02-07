@@ -48,12 +48,17 @@ export async function Navbar() {
                             <div className="flex items-center gap-4">
                                 {/* Host Badge */}
                                 {user.user_metadata?.role === 'host' && (
-                                    <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs font-semibold rounded-md border border-gray-200 dark:bg-zinc-800 dark:text-gray-300 dark:border-zinc-700">
-                                        HOST
-                                    </span>
+                                    <>
+                                        <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs font-semibold rounded-md border border-gray-200 dark:bg-zinc-800 dark:text-gray-300 dark:border-zinc-700">
+                                            HOST
+                                        </span>
+                                        <Link href="/dashboard" className="text-sm font-medium text-gray-700 hover:text-black dark:text-gray-300 dark:hover:text-white hover:underline">
+                                            Dashboard
+                                        </Link>
+                                    </>
                                 )}
 
-                                <Link href="/dashboard" className="text-sm font-medium text-gray-700 hover:text-black dark:text-gray-300 dark:hover:text-white hover:underline">
+                                <Link href="/trips" className="text-sm font-medium text-gray-700 hover:text-black dark:text-gray-300 dark:hover:text-white hover:underline">
                                     Viajes
                                 </Link>
 
