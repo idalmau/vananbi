@@ -19,34 +19,42 @@ interface Booking {
 export function BookingList({ bookings }: { bookings: Booking[] }) {
     const [showCancelled, setShowCancelled] = useState(false)
 
-    const filteredBookings = bookings.filter(b => showCancelled || b.status !== 'cancelled')
+    const hasCancelledBookings = bookings.some(b => b.status === 'cancelled')
+
+    const filteredBookings = bookings.filter(b =>
+        showCancelled
+            ? b.status === 'cancelled'
+            : b.status !== 'cancelled'
+    )
 
     return (
         <section>
             <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Mis Viajes</h2>
-                <div className="flex items-center gap-2">
-                    <label htmlFor="showCancelled" className="text-sm text-gray-600 dark:text-gray-400 cursor-pointer select-none">
-                        Mostrar cancelados
-                    </label>
-                    <button
-                        id="showCancelled"
-                        role="switch"
-                        aria-checked={showCancelled}
-                        onClick={() => setShowCancelled(!showCancelled)}
-                        className={`
-                            relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
-                            ${showCancelled ? 'bg-black dark:bg-white' : 'bg-gray-200 dark:bg-gray-700'}
-                        `}
-                    >
-                        <span
+                {hasCancelledBookings && (
+                    <div className="flex items-center gap-2">
+                        <label htmlFor="showCancelled" className="text-sm text-gray-600 dark:text-gray-400 cursor-pointer select-none">
+                            Mostrar cancelados
+                        </label>
+                        <button
+                            id="showCancelled"
+                            role="switch"
+                            aria-checked={showCancelled}
+                            onClick={() => setShowCancelled(!showCancelled)}
                             className={`
-                                inline-block h-4 w-4 transform rounded-full bg-white transition-transform
-                                ${showCancelled ? 'translate-x-6 dark:bg-black' : 'translate-x-1'}
+                                relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+                                ${showCancelled ? 'bg-black dark:bg-white' : 'bg-gray-200 dark:bg-gray-700'}
                             `}
-                        />
-                    </button>
-                </div>
+                        >
+                            <span
+                                className={`
+                                    inline-block h-4 w-4 transform rounded-full bg-white transition-transform
+                                    ${showCancelled ? 'translate-x-6 dark:bg-black' : 'translate-x-1'}
+                                `}
+                            />
+                        </button>
+                    </div>
+                )}
             </div>
 
             {filteredBookings.length === 0 ? (
@@ -72,9 +80,12 @@ export function BookingList({ bookings }: { bookings: Booking[] }) {
                                 <div className="flex justify-between items-start mb-2">
                                     <h3 className="font-semibold text-gray-900 dark:text-white line-clamp-1">{booking.listing.title}</h3>
                                     <span className={`px-2 py-1 text-xs font-medium rounded-full ${booking.status === 'confirmed' ? 'bg-green-100 text-green-700' :
-                                        booking.status === 'cancelled' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'
+                                        booking.status === 'rejected' ? 'bg-red-100 text-red-700' :
+                                            booking.status === 'cancelled' ? 'bg-gray-100 text-gray-700' : 'bg-yellow-100 text-yellow-700'
                                         }`}>
-                                        {booking.status === 'confirmed' ? 'Confirmado' : booking.status === 'cancelled' ? 'Cancelado' : 'Pendiente'}
+                                        {booking.status === 'confirmed' ? 'Confirmado' :
+                                            booking.status === 'rejected' ? 'Rechazada' :
+                                                booking.status === 'cancelled' ? 'Cancelado' : 'Pendiente'}
                                     </span>
                                 </div>
                                 <p className="text-sm text-gray-500 mb-4">

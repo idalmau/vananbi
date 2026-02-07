@@ -26,6 +26,11 @@ export default async function BookingSuccessPage({ searchParams }: { searchParam
     const isCancelled = booking.status === 'cancelled'
     const isPending = booking.status === 'pending'
 
+    // Safely access listing title (handle array/object inference)
+    const listingTitle = Array.isArray(booking.listing)
+        ? booking.listing[0]?.title
+        : (booking.listing as any)?.title
+
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-black flex flex-col items-center justify-center p-4">
             <div className="max-w-md w-full bg-white dark:bg-zinc-900 rounded-2xl shadow-lg p-8 text-center border border-gray-100 dark:border-zinc-800">
@@ -45,13 +50,13 @@ export default async function BookingSuccessPage({ searchParams }: { searchParam
                 </h1>
 
                 <p className="text-gray-600 dark:text-gray-400 mb-2 font-medium">
-                    {booking.listing.title}
+                    {listingTitle}
                 </p>
 
                 <p className="text-gray-500 dark:text-gray-500 mb-8 text-sm">
                     {isCancelled
                         ? 'Esta reserva ha sido cancelada y no tendrá validez.'
-                        : 'Tu reserva ha sido procesada correctamente.'}
+                        : 'Tu solicitud de reserva ha sido procesada correctamente.'}
                 </p>
 
                 <div className="space-y-3">

@@ -259,7 +259,7 @@ export async function rejectBooking(bookingId: string) {
     // Update status
     const { error } = await supabase
         .from('bookings')
-        .update({ status: 'cancelled' })
+        .update({ status: 'rejected' })
         .eq('id', bookingId)
 
     if (error) {
