@@ -81,6 +81,30 @@ create table public.payments (
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
+-- RLS POLICIES FOR PAYMENTS
+alter table public.payments enable row level security;
+
+-- Users can view their own payments (linked via booking)
+create policy "Users can view own payments" on public.payments
+  for select using (
+    exists (
+      select 1 from public.bookings
+      where bookings.id = payments.booking_id
+      and bookings.user_id = auth.uid()
+    )
+  );
+
+-- Hosts can view payments for their listings
+create policy "Hosts can view payments for their listings" on public.payments
+  for select using (
+    exists (
+      select 1 from public.bookings
+      join public.listings on listings.id = bookings.listing_id
+      where bookings.id = payments.booking_id
+      and listings.host_id = auth.uid()
+    )
+  );
+
 -- RLS POLICIES (Basic Skeleton)
 alter table public.profiles enable row level security;
 alter table public.listings enable row level security;
