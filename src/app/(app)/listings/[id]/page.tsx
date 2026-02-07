@@ -4,6 +4,7 @@ import { getListingById, getListingAvailability } from '@/modules/listings/servi
 import { createClient } from '@/shared/lib/supabase/server'
 import { BookingForm } from '@/modules/booking/components/BookingForm'
 import { getUserBookings } from '@/modules/booking/service'
+import { ListingMap } from './components/ListingMap'
 
 export default async function ListingPage({ params, searchParams }: { params: Promise<{ id: string }>, searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
     const { id } = await params
@@ -96,9 +97,10 @@ export default async function ListingPage({ params, searchParams }: { params: Pr
                             </div>
                         </div>
 
-                        {/* Map Placeholder */}
-                        <div className="h-64 rounded-xl bg-gray-100 dark:bg-zinc-900 flex items-center justify-center border border-gray-200 dark:border-zinc-800">
-                            <span className="text-gray-400 font-medium">Mapa de ubicación (Próximamente)</span>
+                        {/* Map */}
+                        <div>
+                            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Ubicación</h2>
+                            <ListingMap listing={listing} />
                         </div>
                     </div>
 
