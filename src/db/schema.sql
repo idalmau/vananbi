@@ -254,3 +254,17 @@ create policy "Participants can insert messages" on public.messages
       )
     )
   );
+
+-- Participants can update messages (e.g. mark as read)
+create policy "Participants can update messages" on public.messages
+  for update using (
+    exists (
+      select 1 from public.bookings
+      join public.listings on listings.id = bookings.listing_id
+      where bookings.id = messages.booking_id
+      and (
+        bookings.user_id = auth.uid() -- Guest
+        or listings.host_id = auth.uid() -- Host
+      )
+    )
+  );

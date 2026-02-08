@@ -110,10 +110,6 @@ export function BookingChat({ bookingId, initialMessages, currentUserId, startOp
             <div className="p-4 border-b border-gray-200 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-950 flex justify-between items-center">
                 <div>
                     <h3 className="font-semibold text-gray-900 dark:text-white">Chat</h3>
-                    <div className="flex items-center gap-1.5">
-                        <span className="h-2 w-2 bg-green-500 rounded-full"></span>
-                        <p className="text-xs text-gray-500">En línea</p>
-                    </div>
                 </div>
                 <button
                     onClick={() => setIsOpen(false)}
