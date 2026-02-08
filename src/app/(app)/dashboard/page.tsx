@@ -5,7 +5,9 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/shared/lib/supabase/server'
 import { getHostBookings } from '@/modules/booking/service'
 import { getHostListings } from '@/modules/listings/service'
+import { getHostMetrics } from '@/modules/booking/metrics'
 import { BookingActions } from '@/modules/booking/components/BookingActions'
+import { StatsCards } from './components/StatsCards'
 
 export default async function DashboardPage() {
     const supabase = await createClient()
@@ -19,6 +21,7 @@ export default async function DashboardPage() {
 
     const hostListings = isHost ? await getHostListings(user.id) : []
     const hostReservations = isHost ? await getHostBookings(user.id) : []
+    const hostMetrics = isHost ? await getHostMetrics(user.id) : null
 
     return (
         <div className="bg-gray-50 dark:bg-black min-h-screen py-12">
@@ -39,6 +42,7 @@ export default async function DashboardPage() {
                     {/* HOST AREA ONLY */}
                     {isHost ? (
                         <>
+                            {hostMetrics && <StatsCards metrics={hostMetrics} />}
                             <section>
                                 <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Mis Anuncios</h2>
                                 {hostListings.length === 0 ? (
