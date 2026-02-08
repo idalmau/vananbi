@@ -31,7 +31,7 @@ export function SortableHeader({ label, value, currentSort, currentOrder, classN
             params.set('order', 'desc')
         }
 
-        router.push(`${pathname}?${params.toString()}`)
+        router.push(`${pathname}?${params.toString()}`, { scroll: false })
     }
 
     const isActive = currentSort === value

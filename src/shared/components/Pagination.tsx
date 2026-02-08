@@ -23,6 +23,7 @@ export function Pagination({ totalPages, currentPage, baseUrl }: PaginationProps
             {currentPage > 1 ? (
                 <Link
                     href={createPageUrl(currentPage - 1)}
+                    scroll={false}
                     className="p-2 rounded-lg border border-gray-300 dark:border-zinc-700 hover:bg-gray-50 dark:hover:bg-zinc-800 text-gray-500 dark:text-gray-400"
                 >
                     <ChevronLeft className="h-5 w-5" />
@@ -57,6 +58,7 @@ export function Pagination({ totalPages, currentPage, baseUrl }: PaginationProps
                         <Link
                             key={page}
                             href={createPageUrl(page)}
+                            scroll={false}
                             className={`
                                 min-w-[32px] h-8 flex items-center justify-center rounded-lg text-sm font-medium transition-colors
                                 ${currentPage === page
@@ -75,6 +77,7 @@ export function Pagination({ totalPages, currentPage, baseUrl }: PaginationProps
             {currentPage < totalPages ? (
                 <Link
                     href={createPageUrl(currentPage + 1)}
+                    scroll={false}
                     className="p-2 rounded-lg border border-gray-300 dark:border-zinc-700 hover:bg-gray-50 dark:hover:bg-zinc-800 text-gray-500 dark:text-gray-400"
                 >
                     <ChevronRight className="h-5 w-5" />

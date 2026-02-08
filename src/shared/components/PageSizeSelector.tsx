@@ -16,7 +16,7 @@ export function PageSizeSelector({ currentLimit, options = [10, 20, 50, 100] }: 
         const params = new URLSearchParams(searchParams)
         params.set('limit', newLimit.toString())
         params.set('page', '1') // Reset to first page when changing limit
-        router.push(`${pathname}?${params.toString()}`)
+        router.push(`${pathname}?${params.toString()}`, { scroll: false })
     }
 
     return (
