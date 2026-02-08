@@ -92,7 +92,7 @@ export function BookingList({ bookings }: { bookings: Booking[] }) {
                                 </p>
                                 <div className="flex gap-2 items-center">
                                     <Link
-                                        href={`/bookings/success?id=${booking.id}`}
+                                        href={`/bookings/${booking.id}`}
                                         className="flex-1 text-center text-sm border border-gray-300 rounded-lg py-2 hover:bg-gray-50 dark:border-zinc-700 dark:hover:bg-zinc-800 active:scale-95 transition-transform"
                                     >
                                         Ver Detalles

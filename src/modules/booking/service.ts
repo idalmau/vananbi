@@ -79,10 +79,31 @@ export async function getHostBookings(hostId: string) {
                 last_name
             )
         `)
-        .eq('listings.host_id', hostId)
+        .eq('listing.host_id', hostId)
         .order('start_date', { ascending: true })
 
-    return bookings || []
+    if (!bookings || bookings.length === 0) {
+        return []
+    }
+
+    // Fetch unread messages count for these bookings
+    const bookingIds = bookings.map(b => b.id)
+    const { data: unreadMessages } = await supabase
+        .from('messages')
+        .select('booking_id')
+        .in('booking_id', bookingIds)
+        .neq('sender_id', hostId) // Messages NOT from me (the host)
+        .is('read_at', null)      // And not read yet
+
+    const unreadCounts: Record<string, number> = {}
+    unreadMessages?.forEach((msg) => {
+        unreadCounts[msg.booking_id] = (unreadCounts[msg.booking_id] || 0) + 1
+    })
+
+    return bookings.map(b => ({
+        ...b,
+        unread_count: unreadCounts[b.id] || 0
+    }))
 }
 
 export async function getListingBookings(listingId: string) {
