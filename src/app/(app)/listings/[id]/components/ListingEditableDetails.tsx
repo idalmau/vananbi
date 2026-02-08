@@ -5,15 +5,17 @@ import Image from 'next/image'
 import { Listing } from '@/modules/listings/types'
 import { ListingMap } from './ListingMap'
 import { updateListing } from '@/modules/listings/actions'
-import { Loader2 } from 'lucide-react'
+import { Loader2, MapPin } from 'lucide-react'
+import { AvailabilityManager } from '@/modules/listings/components/AvailabilityManager'
 
 interface ListingEditableDetailsProps {
     listing: Listing
     bookingForm: React.ReactNode
     isOwner: boolean
+    bookedDates?: any[]
 }
 
-export function ListingEditableDetails({ listing, bookingForm, isOwner }: ListingEditableDetailsProps) {
+export function ListingEditableDetails({ listing, bookingForm, isOwner, bookedDates = [] }: ListingEditableDetailsProps) {
     const [isEditing, setIsEditing] = useState(false)
     const [isSaving, setIsSaving] = useState(false)
     const [formData, setFormData] = useState({
@@ -55,7 +57,7 @@ export function ListingEditableDetails({ listing, bookingForm, isOwner }: Listin
                             onClick={() => setIsEditing(true)}
                             className="bg-black text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200"
                         >
-                            ✏️ Editar Anuncio
+                            ✏️ Gestionar Anuncio
                         </button>
                     </div>
                 )}
@@ -75,11 +77,12 @@ export function ListingEditableDetails({ listing, bookingForm, isOwner }: Listin
                 <div className="mb-6 flex justify-between items-start">
                     <div>
                         <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{listing.title}</h1>
-                        <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">{listing.location}</p>
+                        <p className="mt-2 text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                            <MapPin className="h-4 w-4" />
+                            {listing.location}
+                        </p>
                     </div>
                 </div>
-
-                {/* Example of "Guest View" toggle could be implicated here by simply having the Edit button available */}
 
                 <div className="relative aspect-video w-full overflow-hidden rounded-2xl bg-gray-200">
                     {listing.image_url ? (
@@ -150,14 +153,14 @@ export function ListingEditableDetails({ listing, bookingForm, isOwner }: Listin
     return (
         <div className="space-y-6">
             <div className="flex justify-between items-center mb-6">
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Editar Anuncio</h1>
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Gestionar Anuncio</h1>
                 <div className="flex gap-2">
                     <button
                         onClick={() => setIsEditing(false)}
                         className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg font-medium dark:text-gray-300 dark:hover:bg-zinc-800"
                         disabled={isSaving}
                     >
-                        Cancelar
+                        Salir
                     </button>
                     <button
                         onClick={handleSave}
@@ -183,12 +186,15 @@ export function ListingEditableDetails({ listing, bookingForm, isOwner }: Listin
 
                 <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Ubicación</label>
-                    <input
-                        type="text"
-                        value={formData.location}
-                        onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                        className="w-full rounded-lg border border-gray-300 px-3 py-2 dark:bg-zinc-800 dark:border-zinc-700 dark:text-white"
-                    />
+                    <div className="relative">
+                        <MapPin className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                        <input
+                            type="text"
+                            value={formData.location}
+                            onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                            className="w-full rounded-lg border border-gray-300 pl-9 pr-3 py-2 dark:bg-zinc-800 dark:border-zinc-700 dark:text-white"
+                        />
+                    </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
@@ -226,6 +232,10 @@ export function ListingEditableDetails({ listing, bookingForm, isOwner }: Listin
                         onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                         className="w-full rounded-lg border border-gray-300 px-3 py-2 dark:bg-zinc-800 dark:border-zinc-700 dark:text-white"
                     />
+                </div>
+
+                <div className="pt-8 border-t border-gray-200 dark:border-zinc-800">
+                    <AvailabilityManager listingId={listing.id} availability={bookedDates} />
                 </div>
             </div>
         </div>

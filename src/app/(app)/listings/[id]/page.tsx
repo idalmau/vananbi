@@ -6,6 +6,7 @@ import { BookingForm } from '@/modules/booking/components/BookingForm'
 import { getUserBookings } from '@/modules/booking/service'
 import { ListingMap } from './components/ListingMap'
 import { ListingEditableDetails } from './components/ListingEditableDetails'
+import { AvailabilityManager } from '@/modules/listings/components/AvailabilityManager'
 
 export default async function ListingPage({ params, searchParams }: { params: Promise<{ id: string }>, searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
     const { id } = await params
@@ -36,11 +37,12 @@ export default async function ListingPage({ params, searchParams }: { params: Pr
 
     return (
         <div className="bg-white dark:bg-black min-h-screen">
-            <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+            <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-12">
                 <ListingEditableDetails
                     listing={listing}
                     bookingForm={bookingForm}
                     isOwner={isOwner}
+                    bookedDates={bookedDates}
                 />
             </div>
         </div>
