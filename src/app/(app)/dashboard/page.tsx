@@ -1,6 +1,7 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
+import { MessageCircle } from 'lucide-react'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/shared/lib/supabase/server'
 import { getHostBookings } from '@/modules/booking/service'
@@ -83,6 +84,7 @@ export default async function DashboardPage() {
                                                     <tr>
                                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vehículo</th>
                                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Huésped</th>
+                                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Chat</th>
                                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fechas</th>
                                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
                                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
@@ -95,7 +97,17 @@ export default async function DashboardPage() {
                                                                 {res.listing.title}
                                                             </td>
                                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                                {res.guest?.first_name} {res.guest?.last_name}
+                                                                <Link href={`/bookings/${res.id}`} className="text-blue-600 hover:underline">
+                                                                    {res.guest?.first_name} {res.guest?.last_name}
+                                                                </Link>
+                                                            </td>
+                                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                                <Link href={`/bookings/${res.id}?openChat=true`} className="relative inline-block p-2 text-gray-400 hover:text-blue-600 transition-colors">
+                                                                    <MessageCircle className="h-5 w-5" />
+                                                                    {res.unread_count > 0 && (
+                                                                        <span className="absolute top-0 right-0 block h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-white transform translate-x-1/4 -translate-y-1/4" />
+                                                                    )}
+                                                                </Link>
                                                             </td>
                                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                                                 {new Date(res.start_date).toLocaleDateString()} → {new Date(res.end_date).toLocaleDateString()}
