@@ -9,8 +9,11 @@ import { getHostListings } from '@/modules/listings/service'
 import { getHostMetrics } from '@/modules/booking/metrics'
 import { BookingActions } from '@/modules/booking/components/BookingActions'
 import { StatsCards } from './components/StatsCards'
+import { BookingTrends } from './components/BookingTrends'
+import { Pagination } from '@/shared/components/Pagination'
+import { PageSizeSelector } from '@/shared/components/PageSizeSelector'
 
-export default async function DashboardPage() {
+export default async function DashboardPage({ searchParams }: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
@@ -18,10 +21,14 @@ export default async function DashboardPage() {
         redirect('/login')
     }
 
+    const { page: pageParam, limit: limitParam } = await searchParams
+    const page = typeof pageParam === 'string' ? parseInt(pageParam) : 1
+    const limit = typeof limitParam === 'string' ? parseInt(limitParam) : 10
+
     const isHost = user.user_metadata?.role === 'host'
 
     const hostListings = isHost ? await getHostListings(user.id) : []
-    const hostReservations = isHost ? await getHostBookings(user.id) : []
+    const hostReservations = isHost ? await getHostBookings(user.id, page, limit) : { data: [], total: 0, totalPages: 0 }
     const hostMetrics = isHost ? await getHostMetrics(user.id) : null
 
     return (
@@ -44,6 +51,11 @@ export default async function DashboardPage() {
                     {isHost ? (
                         <>
                             {hostMetrics && <StatsCards metrics={hostMetrics} />}
+
+                            <div className="mb-12">
+                                <BookingTrends listings={hostListings} hostId={user.id} />
+                            </div>
+
                             <section>
                                 <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Mis Anuncios</h2>
                                 {hostListings.length === 0 ? (
@@ -72,7 +84,7 @@ export default async function DashboardPage() {
 
                             <section>
                                 <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Reservas Recibidas</h2>
-                                {hostReservations.length === 0 ? (
+                                {hostReservations.data.length === 0 ? (
                                     <div className="bg-white dark:bg-zinc-900 rounded-xl p-8 text-center border border-gray-200 dark:border-zinc-800">
                                         <p className="text-gray-500">Aún no tienes reservas en tus vehículos.</p>
                                     </div>
@@ -91,7 +103,7 @@ export default async function DashboardPage() {
                                                     </tr>
                                                 </thead>
                                                 <tbody className="bg-white dark:bg-zinc-900 divide-y divide-gray-200 dark:divide-zinc-800">
-                                                    {hostReservations.map((res: any) => (
+                                                    {hostReservations.data.map((res: any) => (
                                                         <tr key={res.id}>
                                                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
                                                                 {res.listing.title}
@@ -137,6 +149,16 @@ export default async function DashboardPage() {
                                         </div>
                                     </div>
                                 )}
+
+                                <div className="mt-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+                                    <PageSizeSelector currentLimit={limit} />
+
+                                    <Pagination
+                                        totalPages={hostReservations.totalPages}
+                                        currentPage={page}
+                                        baseUrl="/dashboard"
+                                    />
+                                </div>
                             </section>
                         </>
                     ) : (
