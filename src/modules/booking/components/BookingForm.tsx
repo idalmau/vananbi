@@ -8,6 +8,7 @@ import { DayPicker, DateRange } from 'react-day-picker'
 import { es } from 'date-fns/locale'
 import 'react-day-picker/dist/style.css'
 import { differenceInCalendarDays, format } from 'date-fns'
+import { getAvailabilityModifiers, isRangeBlocked } from '@/modules/listings/utils'
 
 interface BookingFormProps {
     listing: Listing
@@ -66,17 +67,17 @@ export function BookingForm({
         return `/login?next=${encodeURIComponent(fullNextPath)}`
     }
 
-    // Convert bookedDates to Date objects (inclusive ranges)
-    const disabledDays = bookedDates.map(b => ({
-        from: new Date(b.start_date),
-        to: new Date(b.end_date)
-    }))
+
+
+    // ... (in BookingForm)
+
+    // Convert bookedDates to Date objects using shared util
+    const disabledDays = getAvailabilityModifiers(bookedDates as any)
 
     // Add "Before Today" to disabled
     const today = new Date()
-    today.setHours(0, 0, 0, 0) // Reset time to start of day
+    today.setHours(0, 0, 0, 0)
 
-    // Also disable "Yesterday" effectively by using `before: today`
     const disabled = [
         ...disabledDays,
         { before: today }
@@ -90,13 +91,11 @@ export function BookingForm({
             const days = differenceInCalendarDays(range.to, range.from)
 
             if (days > 0) {
-                // Check if any date inside the range is disabled
-                const isBlocked = bookedDates.some(b => {
-                    const bStart = new Date(b.start_date)
-                    const bEnd = new Date(b.end_date)
-                    // Check if booking is strictly inside the selected range
-                    return range.from! < bEnd && range.to! > bStart
-                })
+                // Check overlap using shared util
+                const startStr = format(range.from, 'yyyy-MM-dd')
+                const endStr = format(range.to, 'yyyy-MM-dd')
+
+                const isBlocked = isRangeBlocked(startStr, endStr, bookedDates as any)
 
                 if (isBlocked) {
                     setDateError('El rango seleccionado incluye fechas no disponibles.')
