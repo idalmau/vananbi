@@ -48,18 +48,18 @@ export default async function DashboardPage() {
                                 ) : (
                                     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                                         {hostListings.map((listing: any) => (
-                                            <div key={listing.id} className="bg-white dark:bg-zinc-900 rounded-xl overflow-hidden shadow-sm border border-gray-200 dark:border-zinc-800 flex gap-4 p-4">
-                                                <div className="h-20 w-20 relative bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
+                                            <Link href={`/listings/${listing.id}`} key={listing.id} className="bg-white dark:bg-zinc-900 rounded-xl overflow-hidden shadow-sm border border-gray-200 dark:border-zinc-800 flex gap-4 p-4 hover:shadow-md transition-shadow group">
+                                                <div className="h-20 w-20 relative bg-gray-200 rounded-lg overflow-hidden flex-shrink-0 group-hover:scale-105 transition-transform">
                                                     {listing.image_url && <Image src={listing.image_url} alt={listing.title} fill className="object-cover" />}
                                                 </div>
                                                 <div className="flex-1">
-                                                    <h3 className="font-semibold text-gray-900 dark:text-white line-clamp-1">{listing.title}</h3>
+                                                    <h3 className="font-semibold text-gray-900 dark:text-white line-clamp-1 group-hover:text-blue-600 transition-colors">{listing.title}</h3>
                                                     <p className="text-xs text-gray-500">{listing.location}</p>
                                                     <div className="mt-2 text-sm font-medium">
                                                         {new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(listing.price_per_night / 100)} / noche
                                                     </div>
                                                 </div>
-                                            </div>
+                                            </Link>
                                         ))}
                                     </div>
                                 )}

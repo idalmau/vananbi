@@ -1,52 +1,55 @@
 'use server'
 
-import { revalidatePath } from 'next/cache'
-import { redirect } from 'next/navigation'
 import { createClient } from '@/shared/lib/supabase/server'
-import { z } from 'zod' // verifying if I installed zod? I didn't. I'll use manual validation or basic FormData parsing for MVP to minimize deps if I didn't install it.
-// I didn't install zod. I'll stick to basic validation for now or install it. 
-// MVP: manual validation.
+import { revalidatePath } from 'next/cache'
 
-export async function createListing(formData: FormData) {
+export async function updateListing(listingId: string, data: {
+    title: string
+    description: string
+    price_per_night: number
+    location: string
+    image_url: string
+}) {
     const supabase = await createClient()
 
-    // Authenticate user
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user) {
-        return { error: 'Debes iniciar sesión para crear un alojamiento.' }
+    // 1. Verify Authentication & Ownership
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+        return { error: 'Unauthorized' }
     }
 
-    // Basic validation
-    const title = formData.get('title') as string
-    const location = formData.get('location') as string
-    const priceInput = formData.get('price') as string
-    const description = formData.get('description') as string
-    const imageUrl = formData.get('imageUrl') as string
+    // Check if user owns the listing
+    const { data: listing } = await supabase
+        .from('listings')
+        .select('host_id')
+        .eq('id', listingId)
+        .single()
 
-    if (!title || !location || !priceInput) {
-        return { error: 'Por favor completa todos los campos requeridos.' }
+    if (!listing || listing.host_id !== user.id) {
+        return { error: 'Unauthorized: You do not own this listing' }
     }
 
-    const price = parseFloat(priceInput) * 100 // Convert to cents
-    if (isNaN(price)) {
-        return { error: 'Precio inválido.' }
-    }
-
-    // Insert into DB
-    const { data, error } = await supabase.from('listings').insert({
-        host_id: user.id,
-        title,
-        location,
-        description,
-        price_per_night: price,
-        image_url: imageUrl || null
-    }).select().single()
+    // 2. Update Listing
+    const { error } = await supabase
+        .from('listings')
+        .update({
+            title: data.title,
+            description: data.description,
+            price_per_night: data.price_per_night,
+            location: data.location,
+            image_url: data.image_url
+        })
+        .eq('id', listingId)
 
     if (error) {
-        console.error('Create listing error:', error)
-        return { error: 'Error al crear el alojamiento. Por favor intenta de nuevo.' }
+        console.error('Update listing error:', error)
+        return { error: 'Failed to update listing' }
     }
 
+    // 3. Revalidate paths
+    revalidatePath(`/listings/${listingId}`)
+    revalidatePath('/dashboard')
     revalidatePath('/search')
-    redirect(`/listings/${data.id}`)
+
+    return { success: true }
 }
