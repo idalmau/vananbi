@@ -70,8 +70,23 @@ create table public.bookings (
   total_price integer not null, -- cents
   status text check (status in ('pending', 'confirmed', 'cancelled', 'rejected')) default 'pending',
   payment_intent_id text, -- stripe
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  updated_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
+
+-- FUNCTION to auto-update updated_at
+create or replace function public.update_updated_at_column()
+returns trigger as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$ language plpgsql;
+
+-- TRIGGER for bookings updated_at
+create trigger update_bookings_updated_at
+before update on public.bookings
+for each row execute procedure public.update_updated_at_column();
 
 -- PAYMENTS
 create table public.payments (

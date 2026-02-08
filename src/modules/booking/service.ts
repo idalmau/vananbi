@@ -21,7 +21,16 @@ export async function getUserBookings(userId: string) {
     return data || []
 }
 
-export async function getHostBookings(hostId: string, page: number = 1, limit: number = 10) {
+export type SortBy = 'updated_at' | 'created_at' | 'start_date'
+export type SortOrder = 'asc' | 'desc'
+
+export async function getHostBookings(
+    hostId: string,
+    page: number = 1,
+    limit: number = 10,
+    sortBy: SortBy = 'updated_at',
+    sortOrder: SortOrder = 'desc'
+) {
     const supabase = await createClient()
 
     const from = (page - 1) * limit
@@ -44,7 +53,7 @@ export async function getHostBookings(hostId: string, page: number = 1, limit: n
             )
         `, { count: 'exact' })
         .eq('listing.host_id', hostId)
-        .order('start_date', { ascending: false }) // Show newest first usually makes more sense for dashboard
+        .order(sortBy, { ascending: sortOrder === 'asc' })
         .range(from, to)
 
     if (!bookings || bookings.length === 0) {

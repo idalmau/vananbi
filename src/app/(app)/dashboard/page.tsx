@@ -12,6 +12,8 @@ import { StatsCards } from './components/StatsCards'
 import { BookingTrends } from './components/BookingTrends'
 import { Pagination } from '@/shared/components/Pagination'
 import { PageSizeSelector } from '@/shared/components/PageSizeSelector'
+import { SortableHeader } from '@/shared/components/SortableHeader'
+import { SortBy, SortOrder } from '@/modules/booking/service'
 
 export default async function DashboardPage({ searchParams }: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
     const supabase = await createClient()
@@ -21,14 +23,16 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         redirect('/login')
     }
 
-    const { page: pageParam, limit: limitParam } = await searchParams
+    const { page: pageParam, limit: limitParam, sort: sortParam, order: orderParam } = await searchParams
     const page = typeof pageParam === 'string' ? parseInt(pageParam) : 1
     const limit = typeof limitParam === 'string' ? parseInt(limitParam) : 10
+    const sort = (typeof sortParam === 'string' && ['updated_at', 'created_at', 'start_date'].includes(sortParam)) ? sortParam as SortBy : 'updated_at'
+    const order = (typeof orderParam === 'string' && ['asc', 'desc'].includes(orderParam)) ? orderParam as SortOrder : 'desc'
 
     const isHost = user.user_metadata?.role === 'host'
 
     const hostListings = isHost ? await getHostListings(user.id) : []
-    const hostReservations = isHost ? await getHostBookings(user.id, page, limit) : { data: [], total: 0, totalPages: 0 }
+    const hostReservations = isHost ? await getHostBookings(user.id, page, limit, sort, order) : { data: [], total: 0, totalPages: 0 }
     const hostMetrics = isHost ? await getHostMetrics(user.id) : null
 
     return (
@@ -83,7 +87,9 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
                             </section>
 
                             <section>
-                                <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Reservas Recibidas</h2>
+                                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
+                                    <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Reservas Recibidas</h2>
+                                </div>
                                 {hostReservations.data.length === 0 ? (
                                     <div className="bg-white dark:bg-zinc-900 rounded-xl p-8 text-center border border-gray-200 dark:border-zinc-800">
                                         <p className="text-gray-500">Aún no tienes reservas en tus vehículos.</p>
@@ -97,7 +103,21 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
                                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vehículo</th>
                                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Huésped</th>
                                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Chat</th>
-                                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fechas</th>
+
+                                                        <SortableHeader
+                                                            label="Fechas"
+                                                            value="start_date"
+                                                            currentSort={sort}
+                                                            currentOrder={order}
+                                                        />
+
+                                                        <SortableHeader
+                                                            label="Actualizado"
+                                                            value="updated_at"
+                                                            currentSort={sort}
+                                                            currentOrder={order}
+                                                        />
+
                                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
                                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
                                                     </tr>
@@ -123,6 +143,12 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
                                                             </td>
                                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                                                 {new Date(res.start_date).toLocaleDateString()} → {new Date(res.end_date).toLocaleDateString()}
+                                                            </td>
+                                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                                <div className="flex flex-col">
+                                                                    <span>{new Date(res.updated_at).toLocaleDateString()}</span>
+                                                                    <span className="text-xs text-gray-400">{new Date(res.updated_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                                                </div>
                                                             </td>
                                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                                                 {new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(res.total_price / 100)}
