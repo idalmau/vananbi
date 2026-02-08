@@ -9,7 +9,7 @@ interface Booking {
     id: string
     start_date: string
     end_date: string
-    status: 'confirmed' | 'pending' | 'cancelled'
+    status: 'confirmed' | 'pending' | 'cancelled' | 'rejected'
     listing: {
         title: string
         image_url: string | null
@@ -29,8 +29,7 @@ export function BookingList({ bookings }: { bookings: Booking[] }) {
 
     return (
         <section>
-            <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Mis Viajes</h2>
+            <div className="flex justify-end items-center mb-4">
                 {hasCancelledBookings && (
                     <div className="flex items-center gap-2">
                         <label htmlFor="showCancelled" className="text-sm text-gray-600 dark:text-gray-400 cursor-pointer select-none">
