@@ -9,6 +9,7 @@ export type Listing = {
     latitude?: number
     longitude?: number
     image_url: string | null
+    cancellation_policy_days: number
     created_at: string
     images?: ListingImage[]
     host?: {

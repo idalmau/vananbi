@@ -40,7 +40,8 @@ export async function createListing(prevState: any, formData: FormData) {
             image_url, // Keep as cover or fallback
             description,
             latitude: coordinates?.lat || null,
-            longitude: coordinates?.lng || null
+            longitude: coordinates?.lng || null,
+            cancellation_policy_days: 7 // Default
         })
         .select()
         .single()
@@ -108,6 +109,7 @@ export async function updateListing(listingId: string, data: {
     image_url: string
     latitude?: number
     longitude?: number
+    cancellation_policy_days?: number
 }) {
     const supabase = await createClient()
 
@@ -156,7 +158,8 @@ export async function updateListing(listingId: string, data: {
             location: data.location,
             image_url: data.image_url,
             latitude: lat,
-            longitude: lng
+            longitude: lng,
+            cancellation_policy_days: data.cancellation_policy_days
         })
         .eq('id', listingId)
 
