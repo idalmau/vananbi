@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { CancelBookingButton } from './CancelBookingButton'
+import { ReviewForm } from '@/modules/reviews/components/ReviewForm'
 
 interface Booking {
     id: string
@@ -11,13 +12,16 @@ interface Booking {
     end_date: string
     status: 'confirmed' | 'pending' | 'cancelled' | 'rejected'
     listing: {
+        id: string
         title: string
         image_url: string | null
     }
+    reviews?: { id: string }[]
 }
 
 export function BookingList({ bookings }: { bookings: Booking[] }) {
     const [showCancelled, setShowCancelled] = useState(false)
+    const [reviewBooking, setReviewBooking] = useState<Booking | null>(null)
 
     const hasCancelledBookings = bookings.some(b => b.status === 'cancelled')
 
@@ -26,6 +30,14 @@ export function BookingList({ bookings }: { bookings: Booking[] }) {
             ? b.status === 'cancelled'
             : b.status !== 'cancelled'
     )
+
+    const canReview = (booking: Booking) => {
+        if (booking.status !== 'confirmed') return false
+        const endDate = new Date(booking.end_date)
+        const now = new Date()
+        // Allow review if end date is in the past AND no review exists
+        return endDate < now && (!booking.reviews || booking.reviews.length === 0)
+    }
 
     return (
         <section>
@@ -97,7 +109,17 @@ export function BookingList({ bookings }: { bookings: Booking[] }) {
                                     >
                                         Ver Detalles
                                     </Link>
-                                    {booking.status !== 'cancelled' && (
+
+                                    {canReview(booking) && (
+                                        <button
+                                            onClick={() => setReviewBooking(booking)}
+                                            className="px-4 py-2 text-sm bg-black dark:bg-white text-white dark:text-black rounded-lg hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors font-medium"
+                                        >
+                                            Valorar
+                                        </button>
+                                    )}
+
+                                    {!canReview(booking) && booking.status !== 'cancelled' && (
                                         <CancelBookingButton bookingId={booking.id} />
                                     )}
                                 </div>
@@ -105,6 +127,14 @@ export function BookingList({ bookings }: { bookings: Booking[] }) {
                         </div>
                     ))}
                 </div>
+            )}
+
+            {reviewBooking && (
+                <ReviewForm
+                    bookingId={reviewBooking.id}
+                    listingId={reviewBooking.listing.id}
+                    onClose={() => setReviewBooking(null)}
+                />
             )}
         </section>
     )
