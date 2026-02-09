@@ -206,6 +206,17 @@ create policy "Hosts can manage availability" on public.availability
     )
   );
 
+-- Allow hosts to view profiles of guests who have booked their listings
+create policy "Hosts can view booking guests" on public.profiles
+  for select using (
+    exists (
+      select 1 from public.bookings
+      join public.listings on listings.id = bookings.listing_id
+      where bookings.user_id = profiles.id
+      and listings.host_id = auth.uid()
+    )
+  );
+
 -- TRIGGER (Handle New User)
 -- This triggers when a new user signs up via Supabase Auth.
 create or replace function public.handle_new_user()
