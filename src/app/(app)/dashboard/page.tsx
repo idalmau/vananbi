@@ -126,12 +126,14 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
                                                     {hostReservations.data.map((res: any) => (
                                                         <tr key={res.id}>
                                                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
-                                                                {res.listing.title}
+                                                                <Link href={`/bookings/${res.id}`} className="hover:text-blue-600 hover:underline transition-colors">
+                                                                    {res.listing.title}
+                                                                </Link>
                                                             </td>
                                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                                <Link href={`/bookings/${res.id}`} className="text-blue-600 hover:underline">
-                                                                    {res.guest?.first_name} {res.guest?.last_name}
-                                                                </Link>
+                                                                {res.guest?.first_name && res.guest?.last_name
+                                                                    ? `${res.guest.first_name} ${res.guest.last_name}`
+                                                                    : res.guest?.email || 'Usuario'}
                                                             </td>
                                                             <td className="px-6 py-4 whitespace-nowrap">
                                                                 <Link href={`/bookings/${res.id}?openChat=true`} className="relative inline-block p-2 text-gray-400 hover:text-blue-600 transition-colors">
