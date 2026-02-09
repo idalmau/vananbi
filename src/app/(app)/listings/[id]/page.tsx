@@ -1,6 +1,6 @@
 import Image from 'next/image'
 import { notFound } from 'next/navigation'
-import { getListingById, getListingAvailability } from '@/modules/listings/service'
+import { getListingById, getListingAvailability, getListingReviews } from '@/modules/listings/service'
 import { createClient } from '@/shared/lib/supabase/server'
 import { BookingForm } from '@/modules/booking/components/BookingForm'
 import { getUserBookings } from '@/modules/booking/service'
@@ -13,6 +13,7 @@ export default async function ListingPage({ params, searchParams }: { params: Pr
     const { startDate, endDate } = await searchParams
     const listing = await getListingById(id)
     const bookedDates = await getListingAvailability(id)
+    const reviews = await getListingReviews(id)
 
     if (!listing) {
         notFound()
@@ -43,6 +44,7 @@ export default async function ListingPage({ params, searchParams }: { params: Pr
                     bookingForm={bookingForm}
                     isOwner={isOwner}
                     bookedDates={bookedDates}
+                    reviews={reviews}
                 />
             </div>
         </div>

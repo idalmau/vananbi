@@ -7,15 +7,19 @@ import { ListingMap } from './ListingMap'
 import { updateListing } from '@/modules/listings/actions'
 import { Loader2, MapPin } from 'lucide-react'
 import { AvailabilityManager } from '@/modules/listings/components/AvailabilityManager'
+import { ReviewsDisplay } from '@/modules/reviews/components/ReviewsDisplay'
+import { Review } from '@/modules/reviews/types'
 
 interface ListingEditableDetailsProps {
     listing: Listing
     bookingForm: React.ReactNode
     isOwner: boolean
     bookedDates?: any[]
+    reviews?: Review[]
 }
 
-export function ListingEditableDetails({ listing, bookingForm, isOwner, bookedDates = [] }: ListingEditableDetailsProps) {
+export function ListingEditableDetails({ listing, bookingForm, isOwner, bookedDates = [], reviews = [] }: ListingEditableDetailsProps) {
+    // ... existing state ...
     const [isEditing, setIsEditing] = useState(false)
     const [isSaving, setIsSaving] = useState(false)
     const [formData, setFormData] = useState({
@@ -28,6 +32,7 @@ export function ListingEditableDetails({ listing, bookingForm, isOwner, bookedDa
 
     const [viewAsGuest, setViewAsGuest] = useState(false)
 
+    // ... handlers ...
     const handleSave = async () => {
         setIsSaving(true)
         const result = await updateListing(listing.id, formData)
@@ -44,7 +49,7 @@ export function ListingEditableDetails({ listing, bookingForm, isOwner, bookedDa
     if (!isOwner || !isEditing) {
         return (
             <>
-                {/* Host Controls */}
+                {/* ... Host Controls ... */}
                 {isOwner && !viewAsGuest && (
                     <div className="mb-6 flex justify-end gap-2 p-4 bg-gray-50 dark:bg-zinc-900 rounded-xl border border-dashed border-gray-300 dark:border-zinc-700">
                         <button
@@ -94,7 +99,7 @@ export function ListingEditableDetails({ listing, bookingForm, isOwner, bookedDa
 
                 <div className="mt-8 grid grid-cols-1 gap-x-8 gap-y-8 lg:grid-cols-3">
                     <div className="lg:col-span-2 space-y-8">
-                        {/* Host Info (Static for now) */}
+                        {/* Host Info */}
                         <div className="flex items-center gap-4 py-4 border-b border-gray-100 dark:border-zinc-800">
                             <div className="h-12 w-12 rounded-full bg-gray-200 overflow-hidden">
                                 <Image src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${listing.host_id}`} alt="Host" width={48} height={48} />
@@ -116,7 +121,7 @@ export function ListingEditableDetails({ listing, bookingForm, isOwner, bookedDa
                             </p>
                         </div>
 
-                        {/* Amenities (Static) */}
+                        {/* Amenities */}
                         <div>
                             <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Lo que ofrece este vehículo</h2>
                             <div className="grid grid-cols-2 gap-4">
@@ -133,6 +138,12 @@ export function ListingEditableDetails({ listing, bookingForm, isOwner, bookedDa
                                     <span>🕒 Check-in flexible</span>
                                 </div>
                             </div>
+                        </div>
+
+                        {/* Reviews */}
+                        <div>
+                            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Valoraciones</h2>
+                            <ReviewsDisplay reviews={reviews} />
                         </div>
 
                         <div>

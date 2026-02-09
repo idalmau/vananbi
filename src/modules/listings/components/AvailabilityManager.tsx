@@ -40,8 +40,8 @@ export function AvailabilityManager({ listingId, availability }: AvailabilityMan
         startTransition(async () => {
             const res = await blockDates(
                 listingId,
-                format(from, 'yyyy-MM-dd'),
-                format(to, 'yyyy-MM-dd')
+                from,
+                to
             )
             if (res.error) {
                 setMessage('Error: ' + res.error)
