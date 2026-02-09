@@ -102,7 +102,7 @@ export function ListingEditableDetails({ listing, bookingForm, isOwner, bookedDa
                         {/* Host Info */}
                         <div className="flex items-center gap-4 py-4 border-b border-gray-100 dark:border-zinc-800">
                             <div className="h-12 w-12 rounded-full bg-gray-200 overflow-hidden">
-                                <Image src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${listing.host_id}`} alt="Host" width={48} height={48} />
+                                <Image src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${listing.host_id}`} alt="Host" width={48} height={48} unoptimized />
                             </div>
                             <div>
                                 <h3 className="font-semibold text-gray-900 dark:text-white">
