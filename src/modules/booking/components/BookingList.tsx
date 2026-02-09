@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { CancelBookingButton } from './CancelBookingButton'
 import { ReviewForm } from '@/modules/reviews/components/ReviewForm'
 
 interface Booking {
@@ -55,8 +54,8 @@ export function BookingList({ bookings }: { bookings: Booking[] }) {
                 <button
                     onClick={() => setActiveTab('upcoming')}
                     className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-1.5 ${activeTab === 'upcoming'
-                            ? 'border-black text-black dark:border-white dark:text-white'
-                            : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
+                        ? 'border-black text-black dark:border-white dark:text-white'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
                         }`}
                 >
                     Próximos
@@ -64,8 +63,8 @@ export function BookingList({ bookings }: { bookings: Booking[] }) {
                 <button
                     onClick={() => setActiveTab('past')}
                     className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-1.5 ${activeTab === 'past'
-                            ? 'border-black text-black dark:border-white dark:text-white'
-                            : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
+                        ? 'border-black text-black dark:border-white dark:text-white'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
                         }`}
                 >
                     Pasados
@@ -73,8 +72,8 @@ export function BookingList({ bookings }: { bookings: Booking[] }) {
                 <button
                     onClick={() => setActiveTab('cancelled')}
                     className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-1.5 ${activeTab === 'cancelled'
-                            ? 'border-black text-black dark:border-white dark:text-white'
-                            : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
+                        ? 'border-black text-black dark:border-white dark:text-white'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
                         }`}
                 >
                     Cancelados
@@ -134,10 +133,6 @@ export function BookingList({ bookings }: { bookings: Booking[] }) {
                                         >
                                             Valorar
                                         </button>
-                                    )}
-
-                                    {!canReview(booking) && booking.status !== 'cancelled' && booking.status !== 'rejected' && !((new Date(booking.end_date)) < now) && (
-                                        <CancelBookingButton bookingId={booking.id} />
                                     )}
                                 </div>
                             </div>

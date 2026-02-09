@@ -2,6 +2,7 @@ import { notFound, redirect } from 'next/navigation'
 import { createClient } from '@/shared/lib/supabase/server'
 import { BookingChat } from '@/modules/chat/components/BookingChat'
 import { BookingActions } from '@/modules/booking/components/BookingActions'
+import { CancelBookingButton } from '@/modules/booking/components/CancelBookingButton'
 import Image from 'next/image'
 
 export default async function BookingDetailsPage({ params, searchParams }: { params: Promise<{ id: string }>, searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
@@ -109,6 +110,12 @@ export default async function BookingDetailsPage({ params, searchParams }: { par
                                             <BookingActions bookingId={booking.id} status={booking.status} />
                                         </div>
                                     )}
+
+                                    {isGuest && (booking.status === 'pending' || booking.status === 'confirmed') && new Date(booking.end_date) > new Date() && (
+                                        <div className="flex items-center pt-4">
+                                            <CancelBookingButton bookingId={booking.id} />
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -126,6 +133,7 @@ export default async function BookingDetailsPage({ params, searchParams }: { par
                                     alt="User"
                                     width={64}
                                     height={64}
+                                    unoptimized
                                 />
                             </div>
                             <div>
