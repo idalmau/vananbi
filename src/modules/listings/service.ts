@@ -171,3 +171,18 @@ export async function getListingAvailability(listingId: string): Promise<{ start
 
     return [...bookingRanges, ...blockRanges]
 }
+
+export async function getListingReviews(listingId: string) {
+    const supabase = await createClient()
+
+    const { data } = await supabase
+        .from('reviews')
+        .select(`
+            *,
+            guest:profiles(full_name, avatar_url)
+        `)
+        .eq('listing_id', listingId)
+        .order('created_at', { ascending: false })
+
+    return data || []
+}

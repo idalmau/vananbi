@@ -13,7 +13,8 @@ export async function getUserBookings(userId: string) {
                 title,
                 image_url,
                 location
-            )
+            ),
+            reviews:reviews(id)
         `)
         .eq('user_id', userId)
         .order('start_date', { ascending: true })
