@@ -20,60 +20,77 @@ interface Booking {
 }
 
 export function BookingList({ bookings }: { bookings: Booking[] }) {
-    const [showCancelled, setShowCancelled] = useState(false)
+    const [activeTab, setActiveTab] = useState<'upcoming' | 'past' | 'cancelled'>('upcoming')
     const [reviewBooking, setReviewBooking] = useState<Booking | null>(null)
 
-    const hasCancelledBookings = bookings.some(b => b.status === 'cancelled')
+    const now = new Date()
 
-    const filteredBookings = bookings.filter(b =>
-        showCancelled
-            ? b.status === 'cancelled'
-            : b.status !== 'cancelled'
-    )
+    const filteredBookings = bookings.filter(b => {
+        const endDate = new Date(b.end_date)
+        const isPast = endDate < now
+
+        if (activeTab === 'upcoming') {
+            return (b.status === 'confirmed' || b.status === 'pending') && !isPast
+        }
+        if (activeTab === 'past') {
+            return b.status === 'confirmed' && isPast
+        }
+        if (activeTab === 'cancelled') {
+            return b.status === 'cancelled' || b.status === 'rejected'
+        }
+        return false
+    })
 
     const canReview = (booking: Booking) => {
         if (booking.status !== 'confirmed') return false
         const endDate = new Date(booking.end_date)
-        const now = new Date()
         // Allow review if end date is in the past AND no review exists
         return endDate < now && (!booking.reviews || booking.reviews.length === 0)
     }
 
     return (
         <section>
-            <div className="flex justify-end items-center mb-4">
-                {hasCancelledBookings && (
-                    <div className="flex items-center gap-2">
-                        <label htmlFor="showCancelled" className="text-sm text-gray-600 dark:text-gray-400 cursor-pointer select-none">
-                            Mostrar cancelados
-                        </label>
-                        <button
-                            id="showCancelled"
-                            role="switch"
-                            aria-checked={showCancelled}
-                            onClick={() => setShowCancelled(!showCancelled)}
-                            className={`
-                                relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
-                                ${showCancelled ? 'bg-black dark:bg-white' : 'bg-gray-200 dark:bg-gray-700'}
-                            `}
-                        >
-                            <span
-                                className={`
-                                    inline-block h-4 w-4 transform rounded-full bg-white transition-transform
-                                    ${showCancelled ? 'translate-x-6 dark:bg-black' : 'translate-x-1'}
-                                `}
-                            />
-                        </button>
-                    </div>
-                )}
+            {/* Tabs */}
+            <div className="flex gap-2 mb-6 border-b border-gray-200 dark:border-zinc-800 pb-1">
+                <button
+                    onClick={() => setActiveTab('upcoming')}
+                    className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-1.5 ${activeTab === 'upcoming'
+                            ? 'border-black text-black dark:border-white dark:text-white'
+                            : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
+                        }`}
+                >
+                    Próximos
+                </button>
+                <button
+                    onClick={() => setActiveTab('past')}
+                    className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-1.5 ${activeTab === 'past'
+                            ? 'border-black text-black dark:border-white dark:text-white'
+                            : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
+                        }`}
+                >
+                    Pasados
+                </button>
+                <button
+                    onClick={() => setActiveTab('cancelled')}
+                    className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-1.5 ${activeTab === 'cancelled'
+                            ? 'border-black text-black dark:border-white dark:text-white'
+                            : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
+                        }`}
+                >
+                    Cancelados
+                </button>
             </div>
 
             {filteredBookings.length === 0 ? (
                 <div className="bg-white dark:bg-zinc-900 rounded-xl p-8 text-center border border-gray-200 dark:border-zinc-800">
                     <p className="text-gray-500 mb-4">
-                        {bookings.length > 0 ? 'No hay viajes activos visible.' : 'No tienes viajes planeados todavía.'}
+                        {activeTab === 'upcoming' ? 'No tienes viajes próximos.' :
+                            activeTab === 'past' ? 'No tienes viajes pasados.' :
+                                'No tienes viajes cancelados.'}
                     </p>
-                    <Link href="/search" className="text-blue-600 font-medium hover:underline">Buscar una van</Link>
+                    {activeTab === 'upcoming' && (
+                        <Link href="/search" className="text-blue-600 font-medium hover:underline">Buscar una van</Link>
+                    )}
                 </div>
             ) : (
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -119,7 +136,7 @@ export function BookingList({ bookings }: { bookings: Booking[] }) {
                                         </button>
                                     )}
 
-                                    {!canReview(booking) && booking.status !== 'cancelled' && (
+                                    {!canReview(booking) && booking.status !== 'cancelled' && booking.status !== 'rejected' && !((new Date(booking.end_date)) < now) && (
                                         <CancelBookingButton bookingId={booking.id} />
                                     )}
                                 </div>
