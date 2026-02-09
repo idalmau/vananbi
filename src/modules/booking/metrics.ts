@@ -5,6 +5,7 @@ export interface HostMetrics {
     totalBookings: number
     occupancyRate: number
     averageNightlyRate: number
+    averageRating: number
 }
 
 export async function getHostMetrics(hostId: string): Promise<HostMetrics> {
@@ -30,7 +31,8 @@ export async function getHostMetrics(hostId: string): Promise<HostMetrics> {
             totalRevenue: 0,
             totalBookings: 0,
             occupancyRate: 0,
-            averageNightlyRate: 0
+            averageNightlyRate: 0,
+            averageRating: 0
         }
     }
 
@@ -39,7 +41,8 @@ export async function getHostMetrics(hostId: string): Promise<HostMetrics> {
             totalRevenue: 0,
             totalBookings: 0,
             occupancyRate: 0,
-            averageNightlyRate: 0
+            averageNightlyRate: 0,
+            averageRating: 0
         }
     }
 
@@ -119,10 +122,40 @@ export async function getHostMetrics(hostId: string): Promise<HostMetrics> {
 
     const occupancyRate = Math.min(100, Math.round((occupiedNightsLast30 / potentialNights) * 100))
 
+    // 3. Calculate Average Rating
+    const { data: reviews } = await supabase
+        .from('reviews')
+        .select('*')
+        .in('listing_id', (await supabase.from('listings').select('id').eq('host_id', hostId)).data?.map(l => l.id) || [])
+
+    // Better query:
+    // .from('reviews')
+    // .select('rating, listing!inner(host_id)')
+    // .eq('listing.host_id', hostId) -> This might need RLS tweaks or explicit join.
+    // simpler: fetch listing IDs first as above, or use the bookings we already have?
+    // Bookings don't have reviews joined in the first query.
+
+    // Let's use the listing IDs approach.
+    const listingIds = (await supabase.from('listings').select('id').eq('host_id', hostId)).data?.map(l => l.id) || []
+
+    let averageRating = 0
+    if (listingIds.length > 0) {
+        const { data: hostReviews } = await supabase
+            .from('reviews')
+            .select('rating')
+            .in('listing_id', listingIds)
+
+        if (hostReviews && hostReviews.length > 0) {
+            const totalRating = hostReviews.reduce((sum, r) => sum + r.rating, 0)
+            averageRating = totalRating / hostReviews.length
+        }
+    }
+
     return {
         totalRevenue,
         totalBookings,
         occupancyRate, // percentage
-        averageNightlyRate
+        averageNightlyRate,
+        averageRating
     }
 }

@@ -1,4 +1,4 @@
-import { CreditCard, CalendarDays, Percent } from 'lucide-react'
+import { CreditCard, CalendarDays, Percent, Star } from 'lucide-react'
 import { HostMetrics } from '@/modules/booking/metrics'
 
 export function StatsCards({ metrics }: { metrics: HostMetrics }) {
@@ -40,6 +40,20 @@ export function StatsCards({ metrics }: { metrics: HostMetrics }) {
                     <div>
                         <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Ocupación (30d)</p>
                         <h3 className="text-2xl font-bold text-gray-900 dark:text-white">{metrics.occupancyRate}%</h3>
+                    </div>
+                </div>
+            </div>
+
+            <div className="bg-white dark:bg-zinc-900 overflow-hidden rounded-xl border border-gray-200 dark:border-zinc-800 p-6 shadow-sm">
+                <div className="flex items-center gap-4">
+                    <div className="p-3 bg-yellow-100 dark:bg-yellow-900/20 text-yellow-600 dark:text-yellow-400 rounded-lg">
+                        <Star className="h-6 w-6" />
+                    </div>
+                    <div>
+                        <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Valoración Media</p>
+                        <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+                            {metrics.averageRating ? metrics.averageRating.toFixed(1) : '—'}
+                        </h3>
                     </div>
                 </div>
             </div>
