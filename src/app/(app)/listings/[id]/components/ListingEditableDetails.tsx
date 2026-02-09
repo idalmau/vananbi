@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Image from 'next/image'
 import { Listing } from '@/modules/listings/types'
 import { ListingMap } from './ListingMap'
-import { updateListing } from '@/modules/listings/actions'
+import { updateListing, updateListingStatus } from '@/modules/listings/actions'
 import { Loader2, MapPin } from 'lucide-react'
 import { AvailabilityManager } from '@/modules/listings/components/AvailabilityManager'
 import { ReviewsDisplay } from '@/modules/reviews/components/ReviewsDisplay'
@@ -38,7 +38,9 @@ export function ListingEditableDetails({ listing, bookingForm, isOwner, bookedDa
         image_url: listing.image_url || '',
         latitude: listing.latitude,
         longitude: listing.longitude,
-        cancellation_policy_days: listing.cancellation_policy_days || 7
+        cancellation_policy_days: listing.cancellation_policy_days || 7,
+        available_from: listing.available_from || null,
+        available_to: listing.available_to || null
     })
 
     const [viewAsGuest, setViewAsGuest] = useState(false)
@@ -61,19 +63,43 @@ export function ListingEditableDetails({ listing, bookingForm, isOwner, bookedDa
             <>
                 {/* ... Host Controls ... */}
                 {isOwner && !viewAsGuest && (
-                    <div className="mb-6 flex justify-end gap-2 p-4 bg-gray-50 dark:bg-zinc-900 rounded-xl border border-dashed border-gray-300 dark:border-zinc-700">
-                        <button
-                            onClick={() => setViewAsGuest(true)}
-                            className="text-gray-600 hover:text-black dark:text-gray-400 dark:hover:text-white px-3 py-1 text-sm font-medium transition-colors"
-                        >
-                            👁️ Ver como huésped
-                        </button>
-                        <button
-                            onClick={() => setIsEditing(true)}
-                            className="bg-black text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200"
-                        >
-                            ✏️ Gestionar Anuncio
-                        </button>
+                    <div className="mb-6 flex justify-between items-center p-4 bg-gray-50 dark:bg-zinc-900 rounded-xl border border-dashed border-gray-300 dark:border-zinc-700">
+                        <div className="flex items-center gap-3">
+                            <span className={`px-2 py-1 text-xs font-semibold uppercase tracking-wider rounded ${listing.status === 'published' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'}`}>
+                                {listing.status === 'published' ? 'Publicado' : 'Borrador'}
+                            </span>
+                            {listing.status !== 'published' && (
+                                <span className="text-sm text-gray-500">Los huéspedes no pueden ver este anuncio.</span>
+                            )}
+                        </div>
+                        <div className="flex gap-2">
+                            <button
+                                onClick={async () => {
+                                    const newStatus = listing.status === 'published' ? 'draft' : 'published'
+                                    if (confirm(`¿Estás seguro de que quieres ${newStatus === 'published' ? 'publicar' : 'ocultar'} este anuncio?`)) {
+                                        await updateListingStatus(listing.id, newStatus)
+                                    }
+                                }}
+                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${listing.status === 'published'
+                                    ? 'bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-300 dark:hover:bg-red-900/50'
+                                    : 'bg-green-600 text-white hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600'
+                                    }`}
+                            >
+                                {listing.status === 'published' ? 'Ocultar Anuncio' : 'Publicar Anuncio'}
+                            </button>
+                            <button
+                                onClick={() => setViewAsGuest(true)}
+                                className="text-gray-600 hover:text-black dark:text-gray-400 dark:hover:text-white px-3 py-1 text-sm font-medium transition-colors"
+                            >
+                                👁️ Ver como huésped
+                            </button>
+                            <button
+                                onClick={() => setIsEditing(true)}
+                                className="bg-black text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200"
+                            >
+                                ✏️ Gestionar Anuncio
+                            </button>
+                        </div>
                     </div>
                 )}
 
@@ -266,6 +292,35 @@ export function ListingEditableDetails({ listing, bookingForm, isOwner, bookedDa
                         />
                     </div>
                 </div>
+
+                <div>
+                    <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Disponibilidad General</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Disponible Desde</label>
+                            <input
+                                type="date"
+                                value={formData.available_from ? formData.available_from.split('T')[0] : ''}
+                                onChange={(e) => setFormData({ ...formData, available_from: e.target.value || null })}
+                                className="w-full rounded-lg border border-gray-300 px-3 py-2 dark:bg-zinc-800 dark:border-zinc-700 dark:text-white"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Disponible Hasta</label>
+                            <input
+                                type="date"
+                                value={formData.available_to ? formData.available_to.split('T')[0] : ''}
+                                onChange={(e) => setFormData({ ...formData, available_to: e.target.value || null })}
+                                className="w-full rounded-lg border border-gray-300 px-3 py-2 dark:bg-zinc-800 dark:border-zinc-700 dark:text-white"
+                            />
+                        </div>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-2">
+                        Si dejas estas fechas vacías, el vehículo estará disponible indefinidamente.
+                    </p>
+                </div>
+
+                <div className="my-6 border-t border-gray-100 dark:border-zinc-800"></div>
 
                 <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Política de Cancelación (días antes)</label>
