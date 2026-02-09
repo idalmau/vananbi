@@ -35,12 +35,21 @@ export async function createBooking(formData: FormData) {
     // Fetch Listing to verify price & get policy
     const { data: listing } = await supabase
         .from('listings')
-        .select('price_per_night, cancellation_policy_days')
+        .select('price_per_night, cancellation_policy_days, available_from, available_to')
         .eq('id', listingId)
         .single()
 
     if (!listing) {
         return { error: 'El anuncio no existe.' }
+    }
+
+    // Validate Availability Window
+    // available_from / available_to are inclusive
+    if (listing.available_from && new Date(startDate) < new Date(listing.available_from)) {
+        return { error: `Este vehículo solo está disponible a partir del ${new Date(listing.available_from).toLocaleDateString()}.` }
+    }
+    if (listing.available_to && new Date(endDate) > new Date(listing.available_to)) {
+        return { error: `Este vehículo solo está disponible hasta el ${new Date(listing.available_to).toLocaleDateString()}.` }
     }
 
     const pricePerNight = listing.price_per_night // Safe price from DB
