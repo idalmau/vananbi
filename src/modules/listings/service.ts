@@ -14,7 +14,11 @@ const MOCK_LISTINGS: Listing[] = [
         longitude: -3.7038,
         image_url: 'https://images.unsplash.com/photo-1523987355523-c7b5b0dd90a7?auto=format&fit=crop&q=80&w=1600',
         host_id: 'mock_host_1',
-        created_at: new Date().toISOString()
+        created_at: new Date().toISOString(),
+        cancellation_policy_days: 7,
+        available_from: null,
+        available_to: null,
+        status: 'published'
     },
     {
         id: '2',
@@ -26,7 +30,11 @@ const MOCK_LISTINGS: Listing[] = [
         longitude: 2.1734,
         image_url: 'https://images.unsplash.com/photo-1626315862215-62164a2e5783?auto=format&fit=crop&q=80&w=1600',
         host_id: 'mock_host_2',
-        created_at: new Date().toISOString()
+        created_at: new Date().toISOString(),
+        cancellation_policy_days: 7,
+        available_from: null,
+        available_to: null,
+        status: 'published'
     },
     {
         id: '3',
@@ -38,7 +46,11 @@ const MOCK_LISTINGS: Listing[] = [
         longitude: -0.3763,
         image_url: 'https://images.unsplash.com/photo-1517154596051-c636f31f7ac9?auto=format&fit=crop&q=80&w=1600',
         host_id: 'mock_host_1',
-        created_at: new Date().toISOString()
+        created_at: new Date().toISOString(),
+        cancellation_policy_days: 7,
+        available_from: null,
+        available_to: null,
+        status: 'published'
     }
 ]
 
@@ -48,6 +60,7 @@ export async function getListings(query?: string): Promise<Listing[]> {
     let dbQuery = supabase
         .from('listings')
         .select('*')
+        .eq('status', 'published') // Only show published listings
         .order('created_at', { ascending: false })
 
     if (query) {

@@ -41,7 +41,10 @@ export async function createListing(prevState: any, formData: FormData) {
             description,
             latitude: coordinates?.lat || null,
             longitude: coordinates?.lng || null,
-            cancellation_policy_days: 7 // Default
+            cancellation_policy_days: 7, // Default
+            available_from: null,
+            available_to: null,
+            status: 'draft' // Start as draft
         })
         .select()
         .single()
@@ -110,6 +113,8 @@ export async function updateListing(listingId: string, data: {
     latitude?: number
     longitude?: number
     cancellation_policy_days?: number
+    available_from?: string | null
+    available_to?: string | null
 }) {
     const supabase = await createClient()
 
@@ -129,12 +134,6 @@ export async function updateListing(listingId: string, data: {
     if (!listing || listing.host_id !== user.id) {
         return { error: 'Unauthorized: You do not own this listing' }
     }
-
-
-    // Geocode Location if lat/lng are NOT provided but location changed? 
-    // For MVP, we'll behave as follows:
-    // - If lat/lng are provided in data, use them.
-    // - If they are 0 or null (or undefined), AND location string is present, try to geocode.
 
     let lat = data.latitude
     let lng = data.longitude
@@ -159,7 +158,9 @@ export async function updateListing(listingId: string, data: {
             image_url: data.image_url,
             latitude: lat,
             longitude: lng,
-            cancellation_policy_days: data.cancellation_policy_days
+            cancellation_policy_days: data.cancellation_policy_days,
+            available_from: data.available_from,
+            available_to: data.available_to
         })
         .eq('id', listingId)
 
@@ -307,12 +308,7 @@ export async function deleteListingImage(imageId: string, listingId: string, sto
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return { error: 'Unauthorized' }
 
-    // Verify ownership via RLS or explicit check
-    // We'll trust RLS for delete, but we need to check ownership to delete from storage?
-    // Actually, storage RLS relies on bucket Policies.
-    // Our storage policy checks `listing.host_id` matches `auth.uid()`.
-    // The `storagePath` usually contains `listingId/...`. 
-    // To be safe, we should verify logic here too.
+    // Verify ownership via RLS AND explicit check
 
     const { data: listing } = await supabase
         .from('listings')
@@ -374,5 +370,39 @@ export async function reorderImages(listingId: string, imageIds: string[]) {
     await Promise.all(updates)
 
     revalidatePath(`/listings/${listingId}`)
+    return { success: true }
+}
+
+export async function updateListingStatus(listingId: string, status: 'draft' | 'published') {
+    const supabase = await createClient()
+
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+        return { error: 'Unauthorized' }
+    }
+
+    // Check ownership
+    const { data: listing } = await supabase
+        .from('listings')
+        .select('host_id')
+        .eq('id', listingId)
+        .single()
+
+    if (!listing || listing.host_id !== user.id) {
+        return { error: 'Unauthorized' }
+    }
+
+    const { error } = await supabase
+        .from('listings')
+        .update({ status })
+        .eq('id', listingId)
+
+    if (error) {
+        return { error: 'Error modifying status' }
+    }
+
+    revalidatePath(`/listings/${listingId}`)
+    revalidatePath('/dashboard')
+    revalidatePath('/search')
     return { success: true }
 }

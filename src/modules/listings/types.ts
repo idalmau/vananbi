@@ -10,6 +10,9 @@ export type Listing = {
     longitude?: number
     image_url: string | null
     cancellation_policy_days: number
+    available_from: string | null // ISO Date string
+    available_to: string | null // ISO Date string
+    status: 'draft' | 'published'
     created_at: string
     images?: ListingImage[]
     host?: {
