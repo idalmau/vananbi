@@ -9,6 +9,14 @@ import { Loader2, MapPin } from 'lucide-react'
 import { AvailabilityManager } from '@/modules/listings/components/AvailabilityManager'
 import { ReviewsDisplay } from '@/modules/reviews/components/ReviewsDisplay'
 import { Review } from '@/modules/reviews/types'
+import { ImageUploader } from '@/modules/listings/components/ImageUploader'
+import { ListingGallery } from '@/modules/listings/components/ListingGallery'
+import dynamic from 'next/dynamic'
+
+const LocationPicker = dynamic(() => import('@/shared/components/LocationPicker').then(mod => mod.LocationPicker), {
+    ssr: false,
+    loading: () => <div className="h-[300px] w-full bg-gray-100 animate-pulse rounded-xl" />
+})
 
 interface ListingEditableDetailsProps {
     listing: Listing
@@ -19,7 +27,7 @@ interface ListingEditableDetailsProps {
 }
 
 export function ListingEditableDetails({ listing, bookingForm, isOwner, bookedDates = [], reviews = [] }: ListingEditableDetailsProps) {
-    // ... existing state ...
+    // ... state ...
     const [isEditing, setIsEditing] = useState(false)
     const [isSaving, setIsSaving] = useState(false)
     const [formData, setFormData] = useState({
@@ -27,12 +35,13 @@ export function ListingEditableDetails({ listing, bookingForm, isOwner, bookedDa
         description: listing.description || '',
         price_per_night: listing.price_per_night,
         location: listing.location,
-        image_url: listing.image_url || ''
+        image_url: listing.image_url || '',
+        latitude: listing.latitude,
+        longitude: listing.longitude
     })
 
     const [viewAsGuest, setViewAsGuest] = useState(false)
 
-    // ... handlers ...
     const handleSave = async () => {
         setIsSaving(true)
         const result = await updateListing(listing.id, formData)
@@ -67,7 +76,7 @@ export function ListingEditableDetails({ listing, bookingForm, isOwner, bookedDa
                     </div>
                 )}
 
-                {/* Exit Guest View Banner */}
+                {/* Exit Guest View Banner ... */}
                 {isOwner && viewAsGuest && (
                     <div className="fixed bottom-4 right-4 z-50">
                         <button
@@ -89,12 +98,13 @@ export function ListingEditableDetails({ listing, bookingForm, isOwner, bookedDa
                     </div>
                 </div>
 
-                <div className="relative aspect-video w-full overflow-hidden rounded-2xl bg-gray-200">
-                    {listing.image_url ? (
-                        <Image src={listing.image_url} alt={listing.title} fill className="object-cover" priority />
-                    ) : (
-                        <div className="flex h-full items-center justify-center text-gray-400">Imagen No Disponible</div>
-                    )}
+                {/* Gallery */}
+                <div className="mb-8">
+                    <ListingGallery
+                        images={listing.images || []}
+                        coverUrl={listing.image_url}
+                        title={listing.title}
+                    />
                 </div>
 
                 <div className="mt-8 grid grid-cols-1 gap-x-8 gap-y-8 lg:grid-cols-3">
@@ -121,7 +131,7 @@ export function ListingEditableDetails({ listing, bookingForm, isOwner, bookedDa
                             </p>
                         </div>
 
-                        {/* Amenities */}
+                        {/* Amenities ... */}
                         <div>
                             <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Lo que ofrece este vehículo</h2>
                             <div className="grid grid-cols-2 gap-4">
@@ -185,6 +195,15 @@ export function ListingEditableDetails({ listing, bookingForm, isOwner, bookedDa
             </div>
 
             <div className="grid gap-6 bg-white dark:bg-zinc-900 p-6 rounded-xl border border-gray-200 dark:border-zinc-800">
+
+                {/* Image Upload Section */}
+                <div>
+                    <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Galería de Imágenes</h3>
+                    <ImageUploader listingId={listing.id} currentImages={listing.images || []} />
+                </div>
+
+                <div className="my-6 border-t border-gray-100 dark:border-zinc-800"></div>
+
                 <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Título</label>
                     <input
@@ -196,14 +215,41 @@ export function ListingEditableDetails({ listing, bookingForm, isOwner, bookedDa
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Ubicación</label>
-                    <div className="relative">
-                        <MapPin className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Ubicación y Mapa</label>
+                    <LocationPicker
+                        initialLocation={formData.location}
+                        initialLat={formData.latitude}
+                        initialLng={formData.longitude}
+                        onLocationChange={(loc, lat, lng) => {
+                            setFormData(prev => ({
+                                ...prev,
+                                location: loc,
+                                latitude: lat,
+                                longitude: lng
+                            }))
+                        }}
+                    />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Latitud</label>
                         <input
-                            type="text"
-                            value={formData.location}
-                            onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                            className="w-full rounded-lg border border-gray-300 pl-9 pr-3 py-2 dark:bg-zinc-800 dark:border-zinc-700 dark:text-white"
+                            type="number"
+                            step="any"
+                            value={formData.latitude || ''}
+                            onChange={(e) => setFormData({ ...formData, latitude: parseFloat(e.target.value) })}
+                            className="w-full rounded-lg border border-gray-300 px-3 py-2 dark:bg-zinc-800 dark:border-zinc-700 dark:text-white"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Longitud</label>
+                        <input
+                            type="number"
+                            step="any"
+                            value={formData.longitude || ''}
+                            onChange={(e) => setFormData({ ...formData, longitude: parseFloat(e.target.value) })}
+                            className="w-full rounded-lg border border-gray-300 px-3 py-2 dark:bg-zinc-800 dark:border-zinc-700 dark:text-white"
                         />
                     </div>
                 </div>
@@ -221,7 +267,7 @@ export function ListingEditableDetails({ listing, bookingForm, isOwner, bookedDa
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">URL de Imagen</label>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">URL de Imagen (Portada Manual)</label>
                     <input
                         type="text"
                         value={formData.image_url}
