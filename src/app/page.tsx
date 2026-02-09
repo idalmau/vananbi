@@ -2,12 +2,15 @@
 import Link from 'next/link'
 import { createClient } from '@/shared/lib/supabase/server'
 
+import { ScrollToTop } from '@/shared/components/ScrollToTop'
+
 export default async function Home() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
   return (
     <div className="flex flex-col min-h-screen">
+      <ScrollToTop />
       <main className="flex-grow">
         <div className="relative isolate pt-14 dark:bg-black">
           <div className="mx-auto max-w-7xl px-6 pt-4 pb-12 sm:pt-8 sm:pb-16 lg:px-8">
