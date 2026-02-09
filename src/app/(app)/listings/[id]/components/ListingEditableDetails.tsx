@@ -37,7 +37,8 @@ export function ListingEditableDetails({ listing, bookingForm, isOwner, bookedDa
         location: listing.location,
         image_url: listing.image_url || '',
         latitude: listing.latitude,
-        longitude: listing.longitude
+        longitude: listing.longitude,
+        cancellation_policy_days: listing.cancellation_policy_days || 7
     })
 
     const [viewAsGuest, setViewAsGuest] = useState(false)
@@ -264,6 +265,21 @@ export function ListingEditableDetails({ listing, bookingForm, isOwner, bookedDa
                             className="w-full rounded-lg border border-gray-300 px-3 py-2 dark:bg-zinc-800 dark:border-zinc-700 dark:text-white"
                         />
                     </div>
+                </div>
+
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Política de Cancelación (días antes)</label>
+                    <input
+                        type="number"
+                        min="0"
+                        max="30"
+                        value={formData.cancellation_policy_days}
+                        onChange={(e) => setFormData({ ...formData, cancellation_policy_days: parseInt(e.target.value) || 0 })}
+                        className="w-full rounded-lg border border-gray-300 px-3 py-2 dark:bg-zinc-800 dark:border-zinc-700 dark:text-white"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                        El huésped podrá cancelar gratis hasta {formData.cancellation_policy_days} días antes del check-in.
+                    </p>
                 </div>
 
                 <div>

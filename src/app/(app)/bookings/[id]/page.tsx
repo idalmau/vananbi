@@ -111,10 +111,38 @@ export default async function BookingDetailsPage({ params, searchParams }: { par
                                         </div>
                                     )}
 
-                                    {isGuest && (booking.status === 'pending' || booking.status === 'confirmed') && new Date(booking.end_date) > new Date() && (
-                                        <div className="flex items-center pt-4">
-                                            <CancelBookingButton bookingId={booking.id} />
-                                        </div>
+                                    {isGuest && (booking.status === 'pending' || booking.status === 'confirmed') && (
+                                        (() => {
+                                            const today = new Date()
+                                            today.setHours(0, 0, 0, 0)
+                                            const startDate = new Date(booking.start_date)
+                                            const timeDiff = startDate.getTime() - today.getTime()
+                                            const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24))
+
+                                            const policyDays = booking.cancellation_policy_snapshot || 7
+                                            const isPenalty = daysDiff < policyDays
+                                            const canCancel = daysDiff >= 0 // Can cancel until start date (inclusive? User said "if start date is today... not allowed")
+                                            // User said: "not allowed if start date is today or in the past"
+                                            // So daysDiff must be >= 1 (Start date is tomorrow)
+                                            // Let's check logic:
+                                            // If Today is 10th, Start is 10th. Diff is 0. Not allowed.
+                                            // If Today is 9th, Start is 10th. Diff is 1. Allowed.
+
+                                            const isTooLate = daysDiff <= 0
+
+                                            if (isTooLate) return null
+
+                                            return (
+                                                <div className="flex flex-col items-end pt-4 gap-2">
+                                                    {isPenalty && (
+                                                        <span className="text-xs text-red-600 font-medium bg-red-50 px-2 py-1 rounded">
+                                                            ⚠️ Cancelación tardía: Se aplicará cargo completo.
+                                                        </span>
+                                                    )}
+                                                    <CancelBookingButton bookingId={booking.id} />
+                                                </div>
+                                            )
+                                        })()
                                     )}
                                 </div>
                             </div>
