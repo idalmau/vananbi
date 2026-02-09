@@ -89,8 +89,9 @@ export async function getListingById(id: string): Promise<Listing | null> {
 
     const { data, error } = await supabase
         .from('listings')
-        .select('*, host:profiles(*)')
+        .select('*, host:profiles(*), images:listing_images(*)')
         .eq('id', id)
+        .order('position', { foreignTable: 'listing_images', ascending: true })
         .single()
 
     if (error) {

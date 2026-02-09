@@ -10,11 +10,21 @@ export type Listing = {
     longitude?: number
     image_url: string | null
     created_at: string
+    images?: ListingImage[]
     host?: {
         email: string
         role: string
         created_at: string
     }
+}
+
+export type ListingImage = {
+    id: string
+    listing_id: string
+    storage_path: string
+    url: string
+    position: number
+    created_at: string
 }
 
 export type Amenity = {
