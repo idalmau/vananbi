@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Image from 'next/image'
-import { Listing } from '@/modules/listings/types'
+import { Listing, AMENITY_OPTIONS } from '@/modules/listings/types'
 import { ListingMap } from './ListingMap'
 import { updateListing, updateListingStatus } from '@/modules/listings/actions'
 import { Loader2, MapPin } from 'lucide-react'
@@ -40,7 +40,8 @@ export function ListingEditableDetails({ listing, bookingForm, isOwner, bookedDa
         longitude: listing.longitude,
         cancellation_policy_days: listing.cancellation_policy_days || 7,
         available_from: listing.available_from || null,
-        available_to: listing.available_to || null
+        available_to: listing.available_to || null,
+        amenities: listing.amenities || []
     })
 
     const [viewAsGuest, setViewAsGuest] = useState(false)
@@ -158,22 +159,19 @@ export function ListingEditableDetails({ listing, bookingForm, isOwner, bookedDa
                             </p>
                         </div>
 
-                        {/* Amenities ... */}
+                        {/* Amenities */}
                         <div>
                             <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Lo que ofrece este vehículo</h2>
                             <div className="grid grid-cols-2 gap-4">
-                                <div className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
-                                    <span>🍳 Cocina equipada</span>
-                                </div>
-                                <div className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
-                                    <span>🚿 Baño portátil</span>
-                                </div>
-                                <div className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
-                                    <span>🌡️ Calefacción estacionaria</span>
-                                </div>
-                                <div className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
-                                    <span>🕒 Check-in flexible</span>
-                                </div>
+                                {(listing.amenities?.length ? listing.amenities : ['kitchen', 'shower', 'pets']).map(amenityId => {
+                                    const amenity = AMENITY_OPTIONS.find(a => a.id === amenityId)
+                                    if (!amenity) return null
+                                    return (
+                                        <div key={amenityId} className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
+                                            <span>{amenity.icon} {amenity.label}</span>
+                                        </div>
+                                    )
+                                })}
                             </div>
                         </div>
 
@@ -360,6 +358,37 @@ export function ListingEditableDetails({ listing, bookingForm, isOwner, bookedDa
                         onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                         className="w-full rounded-lg border border-gray-300 px-3 py-2 dark:bg-zinc-800 dark:border-zinc-700 dark:text-white"
                     />
+                </div>
+
+                <div>
+                    <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Comodidades</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                        {AMENITY_OPTIONS.map((amenity) => {
+                            const isSelected = formData.amenities?.includes(amenity.id)
+                            return (
+                                <label key={amenity.id} className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-zinc-800 dark:border-zinc-700 transition-colors">
+                                    <input
+                                        type="checkbox"
+                                        checked={isSelected}
+                                        onChange={(e) => {
+                                            const current = formData.amenities || []
+                                            let next
+                                            if (e.target.checked) {
+                                                next = [...current, amenity.id]
+                                            } else {
+                                                next = current.filter(id => id !== amenity.id)
+                                            }
+                                            setFormData({ ...formData, amenities: next })
+                                        }}
+                                        className="h-4 w-4 rounded border-gray-300 text-black focus:ring-black"
+                                    />
+                                    <span className="text-gray-700 dark:text-gray-300">
+                                        {amenity.icon} {amenity.label}
+                                    </span>
+                                </label>
+                            )
+                        })}
+                    </div>
                 </div>
 
                 <div className="pt-8 border-t border-gray-200 dark:border-zinc-800">

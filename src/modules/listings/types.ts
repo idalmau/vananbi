@@ -14,6 +14,7 @@ export type Listing = {
     available_to: string | null // ISO Date string
     status: 'draft' | 'published'
     created_at: string
+    amenities?: string[]
     images?: ListingImage[]
     host?: {
         email: string
@@ -34,5 +35,17 @@ export type ListingImage = {
 export type Amenity = {
     id: string
     label: string
-    icon?: string
+    icon: string
 }
+
+export const AMENITY_OPTIONS: Amenity[] = [
+    { id: 'kitchen', label: 'Cocina equipada', icon: '🍳' },
+    { id: 'shower', label: 'Baño portátil', icon: '🚿' },
+    { id: 'heating', label: 'Calefacción estacionaria', icon: '🌡️' },
+    { id: 'checkin', label: 'Check-in flexible', icon: '🕒' },
+    { id: 'ac', label: 'Aire Acondicionado', icon: '❄️' },
+    { id: 'wifi', label: 'Wi-Fi', icon: '📶' },
+    { id: 'pets', label: 'Mascotas permitidas', icon: '🐾' },
+    { id: 'solar', label: 'Placas solares', icon: '☀️' },
+    { id: 'fridge', label: 'Nevera', icon: '🧊' }
+]

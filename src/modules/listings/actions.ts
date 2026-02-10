@@ -44,7 +44,8 @@ export async function createListing(prevState: any, formData: FormData) {
             cancellation_policy_days: 7, // Default
             available_from: null,
             available_to: null,
-            status: 'draft' // Start as draft
+            status: 'draft', // Start as draft
+            amenities: []
         })
         .select()
         .single()
@@ -115,6 +116,7 @@ export async function updateListing(listingId: string, data: {
     cancellation_policy_days?: number
     available_from?: string | null
     available_to?: string | null
+    amenities?: string[]
 }) {
     const supabase = await createClient()
 
@@ -160,7 +162,8 @@ export async function updateListing(listingId: string, data: {
             longitude: lng,
             cancellation_policy_days: data.cancellation_policy_days,
             available_from: data.available_from,
-            available_to: data.available_to
+            available_to: data.available_to,
+            amenities: data.amenities
         })
         .eq('id', listingId)
 
