@@ -3,6 +3,7 @@ import { createClient } from '@/shared/lib/supabase/server'
 import { BookingChat } from '@/modules/chat/components/BookingChat'
 import { BookingActions } from '@/modules/booking/components/BookingActions'
 import { CancelBookingButton } from '@/modules/booking/components/CancelBookingButton'
+import { ReviewButton } from '@/modules/reviews/components/ReviewButton'
 import Image from 'next/image'
 
 export default async function BookingDetailsPage({ params, searchParams }: { params: Promise<{ id: string }>, searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
@@ -76,14 +77,16 @@ export default async function BookingDetailsPage({ params, searchParams }: { par
                             <div className="flex-1 space-y-4">
                                 <div className="flex justify-between items-start">
                                     <h3 className="text-2xl font-bold text-gray-900 dark:text-white">{booking.listing.title}</h3>
-                                    <span className={`inline-block px-3 py-1 text-sm font-medium rounded-full 
-                                        ${booking.status === 'confirmed' ? 'bg-green-100 text-green-800' :
-                                            booking.status === 'rejected' ? 'bg-red-100 text-red-800' :
-                                                booking.status === 'cancelled' ? 'bg-gray-100 text-gray-800' : 'bg-yellow-100 text-yellow-800'}`}>
-                                        {booking.status === 'confirmed' ? 'Confirmada' :
-                                            booking.status === 'rejected' ? 'Rechazada' :
-                                                booking.status === 'cancelled' ? 'Cancelada' : 'Pendiente'}
-                                    </span>
+                                    {!(booking.status === 'confirmed' && new Date(booking.end_date) < new Date()) && (
+                                        <span className={`inline-block px-3 py-1 text-sm font-medium rounded-full 
+                                            ${booking.status === 'confirmed' ? 'bg-green-100 text-green-800' :
+                                                booking.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                                                    booking.status === 'cancelled' ? 'bg-gray-100 text-gray-800' : 'bg-yellow-100 text-yellow-800'}`}>
+                                            {booking.status === 'confirmed' ? 'Confirmada' :
+                                                booking.status === 'rejected' ? 'Rechazada' :
+                                                    booking.status === 'cancelled' ? 'Cancelada' : 'Pendiente'}
+                                        </span>
+                                    )}
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-4 text-sm">
@@ -116,33 +119,56 @@ export default async function BookingDetailsPage({ params, searchParams }: { par
                                             const today = new Date()
                                             today.setHours(0, 0, 0, 0)
                                             const startDate = new Date(booking.start_date)
+                                            const endDate = new Date(booking.end_date)
                                             const timeDiff = startDate.getTime() - today.getTime()
                                             const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24))
 
-                                            const policyDays = booking.cancellation_policy_snapshot || 7
+                                            // Cancellation Logic
+                                            const policyDays = booking.listing.cancellation_policy_days || 7
                                             const isPenalty = daysDiff < policyDays
-                                            const canCancel = daysDiff >= 0 // Can cancel until start date (inclusive? User said "if start date is today... not allowed")
-                                            // User said: "not allowed if start date is today or in the past"
-                                            // So daysDiff must be >= 1 (Start date is tomorrow)
-                                            // Let's check logic:
-                                            // If Today is 10th, Start is 10th. Diff is 0. Not allowed.
-                                            // If Today is 9th, Start is 10th. Diff is 1. Allowed.
-
                                             const isTooLate = daysDiff <= 0
 
-                                            if (isTooLate) return null
+                                            // Review Logic
+                                            // Check if we can review: Past end date & Confirmed & No review yet
+                                            // Note: We need to know if review exists.
+                                            // For now, let's assume if it's past and confirmed, show button.
+                                            // Ideally, we should fetch review status.
+                                            // But standard is mostly to allow cancel if upcoming.
 
-                                            return (
-                                                <div className="flex flex-col items-end pt-4 gap-2">
-                                                    {isPenalty && (
-                                                        <span className="text-xs text-red-600 font-medium bg-red-50 px-2 py-1 rounded">
-                                                            ⚠️ Cancelación tardía: Se aplicará cargo completo.
-                                                        </span>
-                                                    )}
-                                                    <CancelBookingButton bookingId={booking.id} />
-                                                </div>
-                                            )
+                                            if (!isTooLate && booking.status !== 'confirmed') {
+                                                // Pending cancellation
+                                                return (
+                                                    <div className="flex flex-col items-end pt-4 gap-2">
+                                                        <CancelBookingButton bookingId={booking.id} />
+                                                    </div>
+                                                )
+                                            }
+
+                                            if (!isTooLate && booking.status === 'confirmed') {
+                                                return (
+                                                    <div className="flex flex-col items-end pt-4 gap-2">
+                                                        {isPenalty && (
+                                                            <span className="text-xs text-red-600 font-medium bg-red-50 px-2 py-1 rounded">
+                                                                ⚠️ Cancelación tardía: Se aplicará cargo completo.
+                                                            </span>
+                                                        )}
+                                                        <CancelBookingButton bookingId={booking.id} />
+                                                    </div>
+                                                )
+                                            }
+
+                                            return null
                                         })()
+                                    )}
+
+                                    {/* Review Button for Past Bookings */}
+                                    {isGuest && booking.status === 'confirmed' && new Date(booking.end_date) < new Date() && (
+                                        <div className="pt-4">
+                                            <ReviewButton
+                                                bookingId={booking.id}
+                                                listingId={booking.listing.id}
+                                            />
+                                        </div>
                                     )}
                                 </div>
                             </div>

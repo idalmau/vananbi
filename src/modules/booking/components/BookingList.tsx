@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { ReviewForm } from '@/modules/reviews/components/ReviewForm'
+import { ReviewButton } from '@/modules/reviews/components/ReviewButton'
 
 interface Booking {
     id: string
@@ -20,7 +20,6 @@ interface Booking {
 
 export function BookingList({ bookings }: { bookings: Booking[] }) {
     const [activeTab, setActiveTab] = useState<'upcoming' | 'past' | 'cancelled'>('upcoming')
-    const [reviewBooking, setReviewBooking] = useState<Booking | null>(null)
 
     const now = new Date()
 
@@ -106,14 +105,16 @@ export function BookingList({ bookings }: { bookings: Booking[] }) {
                             <div className="p-4">
                                 <div className="flex justify-between items-start mb-2">
                                     <h3 className="font-semibold text-gray-900 dark:text-white line-clamp-1">{booking.listing.title}</h3>
-                                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${booking.status === 'confirmed' ? 'bg-green-100 text-green-700' :
-                                        booking.status === 'rejected' ? 'bg-red-100 text-red-700' :
-                                            booking.status === 'cancelled' ? 'bg-gray-100 text-gray-700' : 'bg-yellow-100 text-yellow-700'
-                                        }`}>
-                                        {booking.status === 'confirmed' ? 'Confirmado' :
-                                            booking.status === 'rejected' ? 'Rechazada' :
-                                                booking.status === 'cancelled' ? 'Cancelado' : 'Pendiente'}
-                                    </span>
+                                    {activeTab !== 'past' && (
+                                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${booking.status === 'confirmed' ? 'bg-green-100 text-green-700' :
+                                            booking.status === 'rejected' ? 'bg-red-100 text-red-700' :
+                                                booking.status === 'cancelled' ? 'bg-gray-100 text-gray-700' : 'bg-yellow-100 text-yellow-700'
+                                            }`}>
+                                            {booking.status === 'confirmed' ? 'Confirmado' :
+                                                booking.status === 'rejected' ? 'Rechazada' :
+                                                    booking.status === 'cancelled' ? 'Cancelado' : 'Pendiente'}
+                                        </span>
+                                    )}
                                 </div>
                                 <p className="text-sm text-gray-500 mb-4">
                                     {new Date(booking.start_date).toLocaleDateString('es-ES')} - {new Date(booking.end_date).toLocaleDateString('es-ES')}
@@ -127,12 +128,11 @@ export function BookingList({ bookings }: { bookings: Booking[] }) {
                                     </Link>
 
                                     {canReview(booking) && (
-                                        <button
-                                            onClick={() => setReviewBooking(booking)}
+                                        <ReviewButton
+                                            bookingId={booking.id}
+                                            listingId={booking.listing.id}
                                             className="px-4 py-2 text-sm bg-black dark:bg-white text-white dark:text-black rounded-lg hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors font-medium"
-                                        >
-                                            Valorar
-                                        </button>
+                                        />
                                     )}
                                 </div>
                             </div>
@@ -141,13 +141,7 @@ export function BookingList({ bookings }: { bookings: Booking[] }) {
                 </div>
             )}
 
-            {reviewBooking && (
-                <ReviewForm
-                    bookingId={reviewBooking.id}
-                    listingId={reviewBooking.listing.id}
-                    onClose={() => setReviewBooking(null)}
-                />
-            )}
+
         </section>
     )
 }
