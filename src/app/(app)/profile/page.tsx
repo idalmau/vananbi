@@ -2,6 +2,7 @@ import { createClient } from '@/shared/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { signout } from '@/modules/auth/actions'
+import { AvatarUploader } from '@/modules/profile/components/AvatarUploader'
 
 export default async function ProfilePage() {
     const supabase = await createClient()
@@ -11,6 +12,13 @@ export default async function ProfilePage() {
         redirect('/login')
     }
 
+    // Fetch full profile for avatar
+    const { data: profile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single()
+
     const { user_metadata, email } = user
 
     return (
@@ -19,15 +27,18 @@ export default async function ProfilePage() {
 
             <div className="bg-white dark:bg-zinc-900 shadow-sm rounded-xl border border-gray-200 dark:border-zinc-800 overflow-hidden">
                 <div className="p-6 sm:p-8 space-y-6">
-                    <div className="flex items-center gap-4">
-                        <div className="h-16 w-16 bg-gray-200 dark:bg-zinc-800 rounded-full flex items-center justify-center text-2xl font-bold text-gray-500 dark:text-gray-400">
-                            {user_metadata?.first_name?.[0]?.toUpperCase() || email?.[0]?.toUpperCase()}
-                        </div>
+                    <div className="flex items-center gap-6">
+                        <AvatarUploader
+                            currentAvatarUrl={profile?.avatar_url}
+                            userId={user.id}
+                            size={96} // 24 * 4
+                        />
                         <div>
                             <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
                                 {user_metadata?.first_name} {user_metadata?.last_name}
                             </h2>
                             <p className="text-gray-500 dark:text-gray-400">{user_metadata?.username ? `@${user_metadata.username}` : 'Sin nombre de usuario'}</p>
+                            <p className="text-sm text-gray-400 mt-1">Haz clic en la foto para cambiarla</p>
                         </div>
                     </div>
 

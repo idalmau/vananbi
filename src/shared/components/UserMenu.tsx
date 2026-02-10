@@ -1,15 +1,17 @@
 'use client'
 
+import Image from 'next/image'
 import { useState } from 'react'
 import Link from 'next/link'
-import { User, LogOut } from 'lucide-react'
+import { User as UserIcon, LogOut } from 'lucide-react'
 import { signout } from '@/modules/auth/actions'
 
 interface UserMenuProps {
     user: any
+    avatarUrl?: string | null
 }
 
-export function UserMenu({ user }: UserMenuProps) {
+export function UserMenu({ user, avatarUrl }: UserMenuProps) {
     const [isOpen, setIsOpen] = useState(false)
 
     return (
@@ -18,8 +20,16 @@ export function UserMenu({ user }: UserMenuProps) {
             onMouseEnter={() => setIsOpen(true)}
             onMouseLeave={() => setIsOpen(false)}
         >
-            <div className="p-2 text-gray-700 hover:text-black hover:bg-gray-100 rounded-full dark:text-gray-300 dark:hover:text-white dark:hover:bg-zinc-800 transition-colors cursor-pointer">
-                <User className="h-5 w-5" />
+            <div className="flex items-center justify-center p-1 rounded-full text-gray-700 hover:text-black hover:bg-gray-100 dark:text-gray-300 dark:hover:text-white dark:hover:bg-zinc-800 transition-colors cursor-pointer">
+                {avatarUrl ? (
+                    <div className="h-8 w-8 relative rounded-full overflow-hidden border border-gray-200 dark:border-zinc-700">
+                        <Image src={avatarUrl} alt="Avatar" fill className="object-cover" />
+                    </div>
+                ) : (
+                    <div className="p-1">
+                        <UserIcon className="h-6 w-6" />
+                    </div>
+                )}
             </div>
 
             {isOpen && (

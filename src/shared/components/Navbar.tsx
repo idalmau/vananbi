@@ -10,6 +10,16 @@ export async function Navbar() {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
+    let avatarUrl = null
+    if (user) {
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('avatar_url')
+            .eq('id', user.id)
+            .single()
+        avatarUrl = profile?.avatar_url
+    }
+
     return (
         <nav className="border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-black/50 backdrop-blur-md sticky top-0 z-50">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -62,7 +72,7 @@ export async function Navbar() {
                                     Viajes
                                 </Link>
 
-                                <UserMenu user={user} />
+                                <UserMenu user={user} avatarUrl={avatarUrl} />
                             </div>
                         ) : (
                             <div className="flex items-center gap-4">
