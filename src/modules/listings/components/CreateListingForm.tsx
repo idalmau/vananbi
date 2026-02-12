@@ -11,7 +11,9 @@ const initialState = {
 }
 
 
-export function CreateListingForm() {
+import { Van } from '@/modules/vans/types'
+
+export function CreateListingForm({ vans }: { vans: Pick<Van, 'id' | 'make' | 'model' | 'license_plate'>[] }) {
     const [previews, setPreviews] = useState<string[]>([])
     const [selectedFiles, setSelectedFiles] = useState<File[]>([])
 
@@ -66,6 +68,24 @@ export function CreateListingForm() {
 
             <div className="space-y-4">
                 <div className="grid grid-cols-1 gap-4">
+                    <div className="flex flex-col gap-2">
+                        <label htmlFor="vanId" className="text-sm font-medium text-gray-700 dark:text-gray-200">Vehículo</label>
+                        <select
+                            id="vanId"
+                            name="vanId"
+                            required
+                            className="px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-zinc-950 dark:border-zinc-700 dark:text-white"
+                        >
+                            <option value="">Selecciona un vehículo...</option>
+                            {vans.map(van => (
+                                <option key={van.id} value={van.id}>
+                                    {van.make} {van.model} ({van.license_plate})
+                                </option>
+                            ))}
+                        </select>
+                        <p className="text-xs text-gray-500">Solo se muestran tus vehículos aprobados.</p>
+                    </div>
+
                     <div className="flex flex-col gap-2">
                         <label htmlFor="title" className="text-sm font-medium text-gray-700 dark:text-gray-200">Título</label>
                         <input

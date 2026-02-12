@@ -13,6 +13,7 @@ export type Listing = {
     available_from: string | null // ISO Date string
     available_to: string | null // ISO Date string
     status: 'draft' | 'published'
+    van_id?: string | null
     created_at: string
     amenities?: string[]
     images?: ListingImage[]

@@ -19,9 +19,10 @@ export async function createListing(prevState: any, formData: FormData) {
     const price = parseFloat(formData.get('price') as string)
     const image_url = formData.get('imageUrl') as string
     const description = formData.get('description') as string
+    const vanId = formData.get('vanId') as string
 
     // 3. Validate
-    if (!title || !location || !price) {
+    if (!title || !location || !price || !vanId) {
         return { error: 'Faltan campos obligatorios' }
     }
 
@@ -34,6 +35,7 @@ export async function createListing(prevState: any, formData: FormData) {
         .from('listings')
         .insert({
             host_id: user.id,
+            van_id: vanId, // Link to van
             title,
             location,
             price_per_night: Math.round(price * 100), // Convert to cents
