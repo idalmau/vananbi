@@ -46,11 +46,13 @@ export async function signup(formData: FormData) {
         return { error: 'Correo y contraseña son requeridos' }
     }
 
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || origin
+
     const { error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-            emailRedirectTo: `${origin}/auth/callback`,
+            emailRedirectTo: `${siteUrl}/auth/callback`,
             data: {
                 role: role || 'guest',
                 first_name,
