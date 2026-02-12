@@ -1,20 +1,29 @@
+'use client'
+
 import Link from 'next/link'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { useSearchParams, usePathname } from 'next/navigation'
 
 interface PaginationProps {
     totalPages: number
     currentPage: number
-    baseUrl: string
+    baseUrl?: string // Optional now as we use pathname
 }
 
 export function Pagination({ totalPages, currentPage, baseUrl }: PaginationProps) {
+    const searchParams = useSearchParams()
+    const pathname = usePathname()
+
+    // Fallback to baseUrl if provided, else use pathname
+    const finalBaseUrl = baseUrl || pathname
+
     if (totalPages < 1) return null
 
     // Helper to generate URL
     const createPageUrl = (page: number) => {
-        const params = new URLSearchParams()
+        const params = new URLSearchParams(searchParams)
         params.set('page', page.toString())
-        return `${baseUrl}?${params.toString()}`
+        return `${finalBaseUrl}?${params.toString()}`
     }
 
     return (
