@@ -43,36 +43,7 @@ CREATE POLICY "Hosts can insert own van photos" ON public.van_photos FOR INSERT 
 -- 5. Update 'listings' table
 ALTER TABLE public.listings ADD COLUMN IF NOT EXISTS van_id UUID REFERENCES public.vans(id);
 
--- 6. MIGRATION: Backfill existing listings with pseudo-vans
-DO $$
-DECLARE
-    r RECORD;
-    new_van_id UUID;
-BEGIN
-    -- Only migrate listings that don't have a van_id yet
-    FOR r IN SELECT * FROM public.listings WHERE van_id IS NULL LOOP
-        -- Generate a new Van ID
-        new_van_id := uuid_generate_v4();
-        
-        -- Insert a new "Migrated Van" for this listing
-        -- We use the listing title as the model logic for now
-        INSERT INTO public.vans (id, host_id, make, model, year, license_plate, status)
-        VALUES (
-            new_van_id,
-            r.host_id, 
-            'Generic Make', 
-            r.title, 
-            2024, 
-            'MIGRATED-' || substring(r.id::text, 1, 8),
-            'approved' -- Auto-approve migrated vans so listings stay live
-        );
-
-        -- Link the listing to the new van
-        UPDATE public.listings SET van_id = new_van_id WHERE id = r.id;
-    END LOOP;
-END $$;
-
--- 7. Add Constraints (Concurrent safety is tricky but this is DDL)
+-- 6. Add Constraints (Concurrent safety is tricky but this is DDL)
 -- We need btree_gist for the exclusion constraint (uuid =)
 CREATE EXTENSION IF NOT EXISTS btree_gist;
 
