@@ -61,6 +61,7 @@ export async function getListings(query?: string): Promise<Listing[]> {
         .from('listings')
         .select('*')
         .eq('status', 'published') // Only show published listings
+        .or(`available_to.is.null,available_to.gte.${new Date().toISOString().split('T')[0]}`) // Exclude past listings
         .order('created_at', { ascending: false })
 
     if (query) {

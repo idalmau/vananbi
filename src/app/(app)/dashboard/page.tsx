@@ -23,17 +23,34 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
         redirect('/login')
     }
 
-    const { page: pageParam, limit: limitParam, sort: sortParam, order: orderParam } = await searchParams
+    const { page: pageParam, limit: limitParam, sort: sortParam, order: orderParam, tab: tabParam } = await searchParams
     const page = typeof pageParam === 'string' ? parseInt(pageParam) : 1
     const limit = typeof limitParam === 'string' ? parseInt(limitParam) : 10
     const sort = (typeof sortParam === 'string' && ['updated_at', 'created_at', 'start_date'].includes(sortParam)) ? sortParam as SortBy : 'updated_at'
     const order = (typeof orderParam === 'string' && ['asc', 'desc'].includes(orderParam)) ? orderParam as SortOrder : 'desc'
+    const currentTab = (typeof tabParam === 'string' && ['active', 'drafts', 'past'].includes(tabParam)) ? tabParam : 'active'
 
     const isHost = user.user_metadata?.role === 'host'
 
-    const hostListings = isHost ? await getHostListings(user.id) : []
+    const allHostListings = isHost ? await getHostListings(user.id) : []
     const hostReservations = isHost ? await getHostBookings(user.id, page, limit, sort, order) : { data: [], total: 0, totalPages: 0 }
     const hostMetrics = isHost ? await getHostMetrics(user.id) : null
+
+    // Filter Listings based on Tab
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+
+    const filteredListings = allHostListings.filter(l => {
+        if (currentTab === 'drafts') return l.status === 'draft'
+
+        const availableTo = l.available_to ? new Date(l.available_to) : null
+        const isExpired = availableTo && availableTo < today
+
+        if (currentTab === 'past') return l.status === 'published' && isExpired
+
+        // Active
+        return l.status === 'published' && !isExpired
+    })
 
     return (
         <div className="bg-gray-50 dark:bg-black min-h-screen py-12">
@@ -57,27 +74,54 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
                             {hostMetrics && <StatsCards metrics={hostMetrics} />}
 
                             <div className="mb-12">
-                                <BookingTrends listings={hostListings} hostId={user.id} />
+                                <BookingTrends listings={allHostListings} hostId={user.id} />
                             </div>
 
                             <section>
-                                <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Mis Anuncios</h2>
-                                {hostListings.length === 0 ? (
-                                    <div className="bg-white dark:bg-zinc-900 rounded-xl p-8 text-center border border-gray-200 dark:border-zinc-800">
-                                        <p className="text-gray-500">No has publicado ningún anuncio.</p>
+                                <div className="flex items-center justify-between mb-6">
+                                    <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Mis Anuncios</h2>
+                                </div>
+
+                                <div className="flex space-x-1 mb-6 bg-gray-100 p-1 rounded-lg w-fit dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800">
+                                    {['active', 'drafts', 'past'].map((tab) => {
+                                        const labels: any = { active: 'Activos', drafts: 'Borradores', past: 'Pasados' }
+                                        const isActive = currentTab === tab
+                                        return (
+                                            <Link
+                                                key={tab}
+                                                href={`/dashboard?tab=${tab}`}
+                                                className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${isActive
+                                                        ? 'bg-white dark:bg-zinc-800 text-black dark:text-white shadow-sm'
+                                                        : 'text-gray-500 hover:text-gray-900 dark:hover:text-gray-300'
+                                                    }`}
+                                            >
+                                                {labels[tab]}
+                                            </Link>
+                                        )
+                                    })}
+                                </div>
+
+                                {filteredListings.length === 0 ? (
+                                    <div className="bg-white dark:bg-zinc-900 rounded-xl p-12 text-center border border-dashed border-gray-300 dark:border-zinc-700">
+                                        <p className="text-gray-500 mb-2">No hay anuncios en esta sección.</p>
+                                        {currentTab === 'active' && <p className="text-sm text-gray-400">Publica un borrador para verlo aquí.</p>}
                                     </div>
                                 ) : (
                                     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                                        {hostListings.map((listing: any) => (
-                                            <Link href={`/listings/${listing.id}`} key={listing.id} className="bg-white dark:bg-zinc-900 rounded-xl overflow-hidden shadow-sm border border-gray-200 dark:border-zinc-800 flex gap-4 p-4 hover:shadow-md transition-shadow group">
+                                        {filteredListings.map((listing: any) => (
+                                            <Link href={`/listings/${listing.id}`} key={listing.id} className="bg-white dark:bg-zinc-900 rounded-xl overflow-hidden shadow-sm border border-gray-200 dark:border-zinc-800 flex gap-4 p-4 hover:shadow-md transition-shadow group relative">
                                                 <div className="h-20 w-20 relative bg-gray-200 rounded-lg overflow-hidden flex-shrink-0 group-hover:scale-105 transition-transform">
                                                     {listing.image_url && <Image src={listing.image_url} alt={listing.title} fill className="object-cover" />}
                                                 </div>
-                                                <div className="flex-1">
+                                                <div className="flex-1 min-w-0">
                                                     <h3 className="font-semibold text-gray-900 dark:text-white line-clamp-1 group-hover:text-blue-600 transition-colors">{listing.title}</h3>
-                                                    <p className="text-xs text-gray-500">{listing.location}</p>
-                                                    <div className="mt-2 text-sm font-medium">
-                                                        {new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(listing.price_per_night / 100)} / noche
+                                                    <p className="text-xs text-gray-500 truncate">{listing.location}</p>
+                                                    <div className="mt-2 flex items-center justify-between">
+                                                        <span className="text-sm font-medium">
+                                                            {new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(listing.price_per_night / 100)} / noche
+                                                        </span>
+                                                        {currentTab === 'drafts' && <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded">Borrador</span>}
+                                                        {currentTab === 'past' && <span className="text-xs bg-gray-100 text-gray-800 px-2 py-0.5 rounded">Expirado</span>}
                                                     </div>
                                                 </div>
                                             </Link>

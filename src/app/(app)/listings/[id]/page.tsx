@@ -25,6 +25,32 @@ export default async function ListingPage({ params, searchParams }: { params: Pr
 
     const isOwner = user?.id === listing.host_id || false
 
+    // Visibility Check
+    const isDraft = listing.status === 'draft'
+    // Check if expired (available_to is in the past)
+    // We compare with today's date (beginning of day)
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const availableTo = listing.available_to ? new Date(listing.available_to) : null
+    const isExpired = availableTo && availableTo < today
+
+    if (isDraft || isExpired) {
+        if (!user) notFound()
+
+        if (!isOwner) {
+            // Check if user has a confirmed booking for this listing
+            // We use userBookings which is already fetched
+            // userBookings type might need assertion or check
+            const hasConfirmedBooking = userBookings.some((b: any) =>
+                b.listing.id === listing.id && b.status === 'confirmed'
+            )
+
+            if (!hasConfirmedBooking) {
+                notFound()
+            }
+        }
+    }
+
     const bookingForm = (
         <BookingForm
             listing={listing}
