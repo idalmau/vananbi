@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Image from 'next/image'
 import { Listing, AMENITY_OPTIONS } from '@/modules/listings/types'
 import { ListingMap } from './ListingMap'
-import { updateListing, updateListingStatus } from '@/modules/listings/actions'
+import { updateListing, updateListingStatus, deleteListing } from '@/modules/listings/actions'
 import { Loader2, MapPin } from 'lucide-react'
 import { AvailabilityManager } from '@/modules/listings/components/AvailabilityManager'
 import { ReviewsDisplay } from '@/modules/reviews/components/ReviewsDisplay'
@@ -30,6 +30,7 @@ export function ListingEditableDetails({ listing, bookingForm, isOwner, bookedDa
     // ... state ...
     const [isEditing, setIsEditing] = useState(false)
     const [isSaving, setIsSaving] = useState(false)
+    const [isDeleting, setIsDeleting] = useState(false)
     const [formData, setFormData] = useState({
         title: listing.title,
         description: listing.description || '',
@@ -100,6 +101,24 @@ export function ListingEditableDetails({ listing, bookingForm, isOwner, bookedDa
                             >
                                 ✏️ Gestionar Anuncio
                             </button>
+                            {listing.status === 'draft' && (
+                                <button
+                                    onClick={async () => {
+                                        if (confirm('¿Estás seguro de que quieres eliminar este anuncio? Esta acción no se puede deshacer.')) {
+                                            setIsDeleting(true)
+                                            const result = await deleteListing(listing.id)
+                                            if (result?.error) {
+                                                setIsDeleting(false)
+                                                alert(result.error)
+                                            }
+                                        }
+                                    }}
+                                    disabled={isDeleting}
+                                    className="px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg font-medium dark:text-red-400 dark:hover:bg-red-900/20"
+                                >
+                                    {isDeleting ? 'Eliminando...' : '🗑️ Eliminar'}
+                                </button>
+                            )}
                         </div>
                     </div>
                 )}

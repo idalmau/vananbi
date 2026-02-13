@@ -411,3 +411,78 @@ export async function updateListingStatus(listingId: string, status: 'draft' | '
     revalidatePath('/search')
     return { success: true }
 }
+export async function deleteListing(listingId: string) {
+    const supabase = await createClient()
+
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+        return { error: 'Unauthorized' }
+    }
+
+    // Check ownership & status
+    const { data: listing } = await supabase
+        .from('listings')
+        .select('host_id, status')
+        .eq('id', listingId)
+        .single()
+
+    if (!listing || listing.host_id !== user.id) {
+        return { error: 'No autorizado' }
+    }
+
+    if (listing.status !== 'draft') {
+        return { error: 'Solo los anuncios en borrador se pueden eliminar. Por favor, despublícalo primero.' }
+    }
+
+    // Check for future/active bookings
+    const { count } = await supabase
+        .from('bookings')
+        .select('*', { count: 'exact', head: true })
+        .eq('listing_id', listingId)
+        .in('status', ['confirmed', 'pending'])
+        .gte('end_date', new Date().toISOString().split('T')[0])
+
+    if (count && count > 0) {
+        return { error: 'No se puede eliminar un anuncio con reservas activas o futuras.' }
+    }
+
+    // Delete associated bookings first (since no cascade on bookings)
+    // We only delete past bookings or cancelled bookings here since we checked future ones above.
+    const { error: bookingsError } = await supabase
+        .from('bookings')
+        .delete()
+        .eq('listing_id', listingId)
+
+    if (bookingsError) {
+        console.error('Error deleting associated bookings:', bookingsError)
+        return { error: 'Error al eliminar las reservas asociadas.' }
+    }
+
+    // Delete listing images (storage + db)
+    // DB has cascade for listing_images, but storage files might need manual cleanup if triggers aren't set.
+    // Let's assume for now we rely on potential storage triggers or just let them be orphaned in bucket (not ideal but safe for MVP).
+    // Actually, let's try to clean up storage if possible.
+    // Fetch images first
+    const { data: images } = await supabase
+        .from('listing_images')
+        .select('storage_path')
+        .eq('listing_id', listingId)
+
+    if (images && images.length > 0) {
+        const paths = images.map(img => img.storage_path)
+        await supabase.storage.from('listings').remove(paths)
+    }
+
+    // Delete Listing
+    const { error } = await supabase
+        .from('listings')
+        .delete()
+        .eq('id', listingId)
+
+    if (error) {
+        return { error: 'Error al eliminar el anuncio' }
+    }
+
+    revalidatePath('/dashboard')
+    redirect('/dashboard')
+}
