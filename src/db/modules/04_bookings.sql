@@ -60,3 +60,14 @@ create policy "Hosts can update bookings for their listings" on public.bookings
       and listings.host_id = auth.uid()
     )
   );
+
+-- Hosts can delete bookings for their listings (e.g. when deleting a listing)
+create policy "Hosts can delete bookings for their listings" on public.bookings
+  for delete using (
+    exists (
+      select 1 from public.listings
+      where listings.id = bookings.listing_id
+      and listings.host_id = auth.uid()
+    )
+  );
+
