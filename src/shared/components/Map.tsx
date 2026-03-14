@@ -6,7 +6,7 @@ import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Loader } from '@googlemaps/js-api-loader'
+import { setOptions, importLibrary } from '@googlemaps/js-api-loader'
 
 // Environment variables
 const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
@@ -82,13 +82,12 @@ const GoogleMap = ({ listings, center = [40.4168, -3.7038], zoom = 6, onFallback
             return
         }
 
-        const loader = new Loader({
-            apiKey: GOOGLE_MAPS_API_KEY,
-            version: "weekly",
+        setOptions({
+            key: GOOGLE_MAPS_API_KEY,
+            v: "weekly",
         })
 
-        // @ts-ignore: Property 'load' does not exist on type 'Loader' in this specific version's type definitions
-        loader.load().then(() => {
+        importLibrary("maps").then(() => {
             if (mapDivRef.current && !mapRef.current) {
                 const googleMap = new google.maps.Map(mapDivRef.current, {
                     center: { lat: center[0], lng: center[1] },

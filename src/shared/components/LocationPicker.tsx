@@ -5,8 +5,8 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
-import { Search, MapPin, Loader2 } from 'lucide-react'
-import { Loader } from '@googlemaps/js-api-loader'
+import { MapPin, Loader2 } from 'lucide-react'
+import { setOptions, importLibrary } from '@googlemaps/js-api-loader'
 
 // Environment variables
 const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
@@ -124,7 +124,7 @@ export function LocationPicker({ initialLocation, initialLat, initialLng, onLoca
     )
     const [suggestions, setSuggestions] = useState<any[]>([])
     const [showSuggestions, setShowSuggestions] = useState(false)
-    
+
     const wrapperRef = useRef<HTMLDivElement>(null)
 
     // Google Services Refs
@@ -136,14 +136,12 @@ export function LocationPicker({ initialLocation, initialLat, initialLng, onLoca
     // Initialize Google Maps
     useEffect(() => {
         if (provider === 'google' && GOOGLE_MAPS_API_KEY && !googleLoaded) {
-            const loader = new Loader({
-                apiKey: GOOGLE_MAPS_API_KEY,
-                version: "weekly",
-                libraries: ["places"]
+            setOptions({
+                key: GOOGLE_MAPS_API_KEY,
+                v: "weekly"
             })
 
-            // @ts-ignore: Property 'load' does not exist on type 'Loader' in this specific version's type definitions
-            loader.load().then(() => {
+            importLibrary("places").then(() => {
                 setGoogleLoaded(true)
                 autocompleteService.current = new google.maps.places.AutocompleteService()
                 sessionToken.current = new google.maps.places.AutocompleteSessionToken()
