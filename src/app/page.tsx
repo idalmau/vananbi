@@ -1,6 +1,7 @@
 
 import Link from 'next/link'
 import { createClient } from '@/shared/lib/supabase/server'
+import { Button } from '@/components/ui/button'
 
 import { ScrollToTop } from '@/shared/components/ScrollToTop'
 
@@ -23,18 +24,24 @@ export default async function Home() {
               </p>
               <div className="mt-10 flex items-center justify-center gap-x-6">
                 {user?.user_metadata?.role === 'host' ? (
-                  <Link href="/dashboard" className="rounded-full bg-black px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-gray-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black dark:bg-white dark:text-black dark:hover:bg-gray-200 active:scale-95 transition-transform">
-                    Ir a mis anuncios
-                  </Link>
+                  <Button asChild size="lg" className="rounded-full">
+                    <Link href="/dashboard">
+                      Ir a mis anuncios
+                    </Link>
+                  </Button>
                 ) : (
-                  <Link href="/search" className="rounded-full bg-blue-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 active:scale-95 transition-transform">
-                    Empezar a explorar
-                  </Link>
+                  <Button asChild size="lg" className="rounded-full bg-blue-600 hover:bg-blue-500 text-white">
+                    <Link href="/search">
+                      Empezar a explorar
+                    </Link>
+                  </Button>
                 )}
                 {(!user || user.user_metadata?.role !== 'host') && (
-                  <Link href="/signup?role=host" className="text-sm font-semibold leading-6 text-gray-900 dark:text-white hover:text-gray-600 active:scale-95 transition-transform inline-block">
-                    Conviértete en Host <span aria-hidden="true">→</span>
-                  </Link>
+                  <Button asChild variant="ghost" className="rounded-full">
+                    <Link href="/signup?role=host">
+                      Conviértete en Host <span aria-hidden="true" className="ml-2">→</span>
+                    </Link>
+                  </Button>
                 )}
               </div>
             </div>
