@@ -87,6 +87,7 @@ const GoogleMap = ({ listings, center = [40.4168, -3.7038], zoom = 6, onFallback
             version: "weekly",
         })
 
+        // @ts-ignore: Property 'load' does not exist on type 'Loader' in this specific version's type definitions
         loader.load().then(() => {
             if (mapDivRef.current && !mapRef.current) {
                 const googleMap = new google.maps.Map(mapDivRef.current, {
@@ -137,7 +138,7 @@ const GoogleMap = ({ listings, center = [40.4168, -3.7038], zoom = 6, onFallback
                     }
                 })
             }
-        }).catch((e) => {
+        }).catch((e: any) => {
             console.error("Failed to load Google Maps:", e)
             onFallback()
         })

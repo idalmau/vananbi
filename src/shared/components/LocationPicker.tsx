@@ -118,6 +118,14 @@ export function LocationPicker({ initialLocation, initialLat, initialLng, onLoca
     const [provider, setProvider] = useState<'google' | 'osm'>(DEFAULT_PROVIDER === 'google' && GOOGLE_MAPS_API_KEY ? 'google' : 'osm')
     const [googleLoaded, setGoogleLoaded] = useState(false)
     const [loading, setLoading] = useState(false)
+    const [query, setQuery] = useState(initialLocation)
+    const [position, setPosition] = useState<[number, number]>(
+        initialLat && initialLng ? [initialLat, initialLng] : [40.4168, -3.7038]
+    )
+    const [suggestions, setSuggestions] = useState<any[]>([])
+    const [showSuggestions, setShowSuggestions] = useState(false)
+    
+    const wrapperRef = useRef<HTMLDivElement>(null)
 
     // Google Services Refs
     const autocompleteService = useRef<google.maps.places.AutocompleteService | null>(null)
@@ -134,6 +142,7 @@ export function LocationPicker({ initialLocation, initialLat, initialLng, onLoca
                 libraries: ["places"]
             })
 
+            // @ts-ignore: Property 'load' does not exist on type 'Loader' in this specific version's type definitions
             loader.load().then(() => {
                 setGoogleLoaded(true)
                 autocompleteService.current = new google.maps.places.AutocompleteService()
@@ -142,7 +151,7 @@ export function LocationPicker({ initialLocation, initialLat, initialLng, onLoca
                 if (mapDivRef.current) {
                     placesService.current = new google.maps.places.PlacesService(mapDivRef.current)
                 }
-            }).catch((e) => {
+            }).catch((e: any) => {
                 console.error("Failed to load Google Maps:", e)
                 switchToOSM()
             })
