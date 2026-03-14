@@ -118,13 +118,12 @@ export function LocationPicker({ initialLocation, initialLat, initialLng, onLoca
     const [provider, setProvider] = useState<'google' | 'osm'>(DEFAULT_PROVIDER === 'google' && GOOGLE_MAPS_API_KEY ? 'google' : 'osm')
     const [googleLoaded, setGoogleLoaded] = useState(false)
     const [loading, setLoading] = useState(false)
-    const [query, setQuery] = useState(initialLocation)
+    const [query, setQuery] = useState(initialLocation || '')
     const [position, setPosition] = useState<[number, number]>(
         initialLat && initialLng ? [initialLat, initialLng] : [40.4168, -3.7038]
     )
     const [suggestions, setSuggestions] = useState<any[]>([])
     const [showSuggestions, setShowSuggestions] = useState(false)
-
     const wrapperRef = useRef<HTMLDivElement>(null)
 
     // Google Services Refs
@@ -229,7 +228,7 @@ export function LocationPicker({ initialLocation, initialLat, initialLng, onLoca
             const data = await searchLocations(text)
             setSuggestions(data.map((p: any) => ({ ...p, source: 'osm' })))
             setShowSuggestions(true)
-        } catch (e) {
+        } catch (e: any) {
             console.error("OSM Search Error", e)
         } finally {
             setLoading(false)
