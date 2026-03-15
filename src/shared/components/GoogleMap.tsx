@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useRef } from 'react'
-import { Loader } from '@googlemaps/js-api-loader'
+import { setOptions, importLibrary } from '@googlemaps/js-api-loader'
 
 interface MapProps {
     listings: any[]
@@ -20,12 +20,12 @@ export const GoogleMap = ({ listings, center = [40.4168, -3.7038], zoom = 6, onF
             return
         }
 
-        const loader = new Loader({
-            apiKey: GOOGLE_MAPS_API_KEY,
-            version: "weekly",
+        setOptions({
+            key: GOOGLE_MAPS_API_KEY,
+            v: "weekly",
         })
 
-        ;(loader as any).importLibrary("maps").then(() => {
+        importLibrary("maps").then(() => {
             if (mapDivRef.current && !mapRef.current) {
                 const googleMap = new google.maps.Map(mapDivRef.current, {
                     center: { lat: center[0], lng: center[1] },

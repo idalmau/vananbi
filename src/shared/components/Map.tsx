@@ -12,6 +12,7 @@ interface MapProps {
     zoom?: number
 }
 
+
 const Map = (props: MapProps) => {
     const [provider, setProvider] = useState<'google' | 'osm'>(DEFAULT_PROVIDER === 'google' && GOOGLE_MAPS_API_KEY ? 'google' : 'osm')
 
