@@ -12,6 +12,7 @@ const initialState = {
 
 
 import { Van } from '@/modules/vans/types'
+import { VEHICLE_TYPE_OPTIONS, HANDOVER_METHOD_OPTIONS } from '@/modules/listings/types'
 
 export function CreateListingForm({ vans }: { vans: Pick<Van, 'id' | 'make' | 'model' | 'license_plate'>[] }) {
     const [previews, setPreviews] = useState<string[]>([])
@@ -107,6 +108,40 @@ export function CreateListingForm({ vans }: { vans: Pick<Van, 'id' | 'make' | 'm
                             className="px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-zinc-950 dark:border-zinc-700 dark:text-white"
                             placeholder="ej. Portosín, Galicia"
                         />
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="flex flex-col gap-2">
+                            <label htmlFor="vehicleType" className="text-sm font-medium text-gray-700 dark:text-gray-200">Tipo de vehículo</label>
+                            <select
+                                id="vehicleType"
+                                name="vehicleType"
+                                className="px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-zinc-950 dark:border-zinc-700 dark:text-white"
+                            >
+                                <option value="">Sin especificar</option>
+                                {VEHICLE_TYPE_OPTIONS.map(opt => (
+                                    <option key={opt.id} value={opt.id}>
+                                        {opt.icon} {opt.label}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div className="flex flex-col gap-2">
+                            <label htmlFor="handoverMethod" className="text-sm font-medium text-gray-700 dark:text-gray-200">Entrega de llaves</label>
+                            <select
+                                id="handoverMethod"
+                                name="handoverMethod"
+                                className="px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-zinc-950 dark:border-zinc-700 dark:text-white"
+                            >
+                                <option value="">Sin especificar</option>
+                                {HANDOVER_METHOD_OPTIONS.map(opt => (
+                                    <option key={opt.id} value={opt.id}>
+                                        {opt.icon} {opt.label}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
                     </div>
 
                     <div className="flex flex-col gap-2">
