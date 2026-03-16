@@ -7,6 +7,7 @@ import { cn } from '@/shared/lib/utils'
 
 const initialState = {
     error: '',
+    email: '',
 }
 
 export function LoginForm({ next }: { next?: string }) {
@@ -29,6 +30,7 @@ export function LoginForm({ next }: { next?: string }) {
                     id="email"
                     name="email"
                     type="email"
+                    defaultValue={state?.email || ''}
                     required
                     className="px-3 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-zinc-900 dark:border-zinc-700"
                     placeholder="tu@email.com"

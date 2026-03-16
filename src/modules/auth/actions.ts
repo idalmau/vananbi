@@ -13,7 +13,7 @@ export async function login(formData: FormData) {
     const password = formData.get('password') as string
 
     if (!email || !password) {
-        return { error: 'Correo y contraseña son requeridos' }
+        return { error: 'Correo y contraseña son requeridos', email }
     }
 
     const { error } = await supabase.auth.signInWithPassword({
@@ -22,7 +22,7 @@ export async function login(formData: FormData) {
     })
 
     if (error) {
-        return { error: error.message }
+        return { error: error.message, email }
     }
 
     const next = formData.get('next') as string
