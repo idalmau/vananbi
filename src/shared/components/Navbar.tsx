@@ -1,10 +1,11 @@
-
+import { Suspense } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { createClient } from '@/shared/lib/supabase/server'
 import { signout } from '@/modules/auth/actions'
 import { User } from 'lucide-react'
 import { UserMenu } from './UserMenu'
+import { SearchBar } from './SearchBar'
 
 export async function Navbar() {
     const supabase = await createClient()
@@ -37,18 +38,10 @@ export async function Navbar() {
                         </Link>
                     </div>
 
-                    <div className="hidden sm:flex flex-1 max-w-lg px-8">
-                        <form action="/search" className="w-full relative">
-                            <input
-                                type="text"
-                                name="destination"
-                                placeholder="Buscar destinos..."
-                                className="w-full bg-gray-100 border-none rounded-full py-3 px-6 pl-12 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-gray-200"
-                            />
-                            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></svg>
-                            </div>
-                        </form>
+                    <div className="hidden sm:flex flex-1 max-w-[700px] px-8 justify-center">
+                        <Suspense fallback={<div className="h-12 w-full max-w-lg bg-gray-100 rounded-full animate-pulse" />}>
+                            <SearchBar />
+                        </Suspense>
                     </div>
 
                     <div className="flex items-center gap-4">

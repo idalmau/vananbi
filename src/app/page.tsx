@@ -1,4 +1,3 @@
-
 import Link from 'next/link'
 import { createClient } from '@/shared/lib/supabase/server'
 import { Button } from '@/components/ui/button'
