@@ -54,7 +54,13 @@ const MOCK_LISTINGS: Listing[] = [
     }
 ]
 
-export async function getListings(query?: string): Promise<Listing[]> {
+export interface ListingFilters {
+    query?: string
+    vehicleType?: string[]
+    handoverMethod?: string[]
+}
+
+export async function getListings(filters?: ListingFilters): Promise<Listing[]> {
     const supabase = await createClient()
 
     let dbQuery = supabase
@@ -64,9 +70,17 @@ export async function getListings(query?: string): Promise<Listing[]> {
         .or(`available_to.is.null,available_to.gte.${new Date().toISOString().split('T')[0]}`) // Exclude past listings
         .order('created_at', { ascending: false })
 
-    if (query) {
+    if (filters?.query) {
         // Search in title OR location (case-insensitive)
-        dbQuery = dbQuery.or(`title.ilike.%${query}%,location.ilike.%${query}%`)
+        dbQuery = dbQuery.or(`title.ilike.%${filters.query}%,location.ilike.%${filters.query}%`)
+    }
+
+    if (filters?.vehicleType && filters.vehicleType.length > 0) {
+        dbQuery = dbQuery.in('vehicle_type', filters.vehicleType)
+    }
+
+    if (filters?.handoverMethod && filters.handoverMethod.length > 0) {
+        dbQuery = dbQuery.in('handover_method', filters.handoverMethod)
     }
 
     const { data, error } = await dbQuery
@@ -77,9 +91,7 @@ export async function getListings(query?: string): Promise<Listing[]> {
     }
 
     if (!data || data.length === 0) {
-        // If no query and no data, maybe return mock? 
-        // But if filtering, we should return empty if no match.
-        if (query) return []
+        if (filters?.query || filters?.vehicleType || filters?.handoverMethod) return []
 
         console.log('Fetching listings empty, using mock data')
         return MOCK_LISTINGS
