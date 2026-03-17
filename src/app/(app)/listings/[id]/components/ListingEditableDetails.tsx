@@ -43,7 +43,6 @@ export function ListingEditableDetails({ listing, bookingForm, isOwner, bookedDa
         cancellation_policy_days: listing.cancellation_policy_days || 7,
         available_from: listing.available_from || null,
         available_to: listing.available_to || null,
-        available_to: listing.available_to || null,
         rules: listing.rules || [],
         equipment: listing.equipment || []
     })
@@ -162,7 +161,7 @@ export function ListingEditableDetails({ listing, bookingForm, isOwner, bookedDa
                         {/* Compact Host Card */}
                         <div className="py-6 border-b border-gray-100 dark:border-zinc-800">
                             <div className="flex items-center justify-between p-4 rounded-2xl bg-gray-50 dark:bg-zinc-800/40 border border-gray-100 dark:border-zinc-800">
-                                <Link 
+                                <Link
                                     href={`/hosts/${listing.host_id}`}
                                     className="flex items-center gap-4 group"
                                 >
