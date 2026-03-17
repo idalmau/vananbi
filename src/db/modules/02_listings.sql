@@ -11,6 +11,8 @@ create table public.listings (
   image_url text, -- simplified for MVP, single image or comma-separated
   vehicle_type text check (vehicle_type in ('camper', 'motorhome', 'caravan', 'minivan', 'other')) default 'other',
   handover_method text check (handover_method in ('in_person', 'automatic')) default 'in_person',
+  rules jsonb default '[]'::jsonb,
+  equipment jsonb default '[]'::jsonb,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 

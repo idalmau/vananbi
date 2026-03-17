@@ -1,4 +1,0 @@
--- AMENITIES
-
-ALTER TABLE public.listings 
-ADD COLUMN IF NOT EXISTS amenities TEXT[] DEFAULT '{}';

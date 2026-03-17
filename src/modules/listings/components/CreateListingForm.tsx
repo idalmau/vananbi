@@ -12,7 +12,7 @@ const initialState = {
 
 
 import { Van } from '@/modules/vans/types'
-import { VEHICLE_TYPE_OPTIONS, HANDOVER_METHOD_OPTIONS } from '@/modules/listings/types'
+import { VEHICLE_TYPE_OPTIONS, HANDOVER_METHOD_OPTIONS, RULE_OPTIONS, EQUIPMENT_OPTIONS } from '@/modules/listings/types'
 
 export function CreateListingForm({ vans }: { vans: Pick<Van, 'id' | 'make' | 'model' | 'license_plate'>[] }) {
     const [previews, setPreviews] = useState<string[]>([])
@@ -204,6 +204,30 @@ export function CreateListingForm({ vans }: { vans: Pick<Van, 'id' | 'make' | 'm
                             placeholder="https://images.unsplash.com/..."
                         />
                         <p className="text-xs text-gray-500">Alternativa: Usa una URL directa si prefieres.</p>
+                    </div>
+
+                    <div className="flex flex-col gap-2">
+                        <label className="text-sm font-medium text-gray-700 dark:text-gray-200">Equipamiento</label>
+                        <div className="grid grid-cols-2 gap-2">
+                            {EQUIPMENT_OPTIONS.map(opt => (
+                                <label key={opt.id} className="flex items-center gap-2 p-2 border border-gray-200 dark:border-zinc-800 rounded-lg hover:bg-gray-50 dark:hover:bg-zinc-800 cursor-pointer">
+                                    <input type="checkbox" name="equipment" value={opt.id} className="h-4 w-4 rounded border-gray-300 text-black focus:ring-black" />
+                                    <span className="text-sm text-gray-700 dark:text-gray-200">{opt.icon} {opt.label}</span>
+                                </label>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="flex flex-col gap-2">
+                        <label className="text-sm font-medium text-gray-700 dark:text-gray-200">Reglas</label>
+                        <div className="grid grid-cols-2 gap-2">
+                            {RULE_OPTIONS.map(opt => (
+                                <label key={opt.id} className="flex items-center gap-2 p-2 border border-gray-200 dark:border-zinc-800 rounded-lg hover:bg-gray-50 dark:hover:bg-zinc-800 cursor-pointer">
+                                    <input type="checkbox" name="rules" value={opt.id} className="h-4 w-4 rounded border-gray-300 text-black focus:ring-black" />
+                                    <span className="text-sm text-gray-700 dark:text-gray-200">{opt.icon} {opt.label}</span>
+                                </label>
+                            ))}
+                        </div>
                     </div>
 
                     <div className="flex flex-col gap-2">

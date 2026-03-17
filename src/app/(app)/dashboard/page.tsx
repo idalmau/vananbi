@@ -5,7 +5,7 @@ import { MessageCircle } from 'lucide-react'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/shared/lib/supabase/server'
 import { getHostBookings } from '@/modules/booking/service'
-import { getHostListings } from '@/modules/listings/service'
+import { getListingsByHost } from '@/modules/listings/service'
 import { getHostMetrics } from '@/modules/booking/metrics'
 import { BookingActions } from '@/modules/booking/components/BookingActions'
 import { StatsCards } from './components/StatsCards'
@@ -43,7 +43,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     const isHost = user.user_metadata?.role === 'host'
 
     // Data Fetching based on View
-    const allHostListings = isHost ? await getHostListings(user.id) : []
+    const allHostListings = isHost ? await getListingsByHost(user.id) : []
 
     // Analytics Data
     const hostMetrics = (isHost && currentView === 'analytics') ? await getHostMetrics(user.id) : null

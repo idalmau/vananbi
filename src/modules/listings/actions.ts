@@ -22,6 +22,8 @@ export async function createListing(prevState: any, formData: FormData) {
     const vanId = formData.get('vanId') as string
     const vehicleType = (formData.get('vehicleType') as string) || null
     const handoverMethod = (formData.get('handoverMethod') as string) || null
+    const rules = formData.getAll('rules') as string[]
+    const equipment = formData.getAll('equipment') as string[]
 
     // 3. Validate
     if (!title || !location || !price || !vanId) {
@@ -49,9 +51,9 @@ export async function createListing(prevState: any, formData: FormData) {
             available_from: null,
             available_to: null,
             status: 'draft', // Start as draft
-            amenities: [],
-            vehicle_type: vehicleType,
-            handover_method: handoverMethod
+            handover_method: handoverMethod,
+            rules,
+            equipment
         })
         .select()
         .single()
@@ -122,9 +124,8 @@ export async function updateListing(listingId: string, data: {
     cancellation_policy_days?: number
     available_from?: string | null
     available_to?: string | null
-    amenities?: string[]
-    vehicle_type?: string | null
-    handover_method?: string | null
+    rules?: string[]
+    equipment?: string[]
 }) {
     const supabase = await createClient()
 
@@ -171,9 +172,8 @@ export async function updateListing(listingId: string, data: {
             cancellation_policy_days: data.cancellation_policy_days,
             available_from: data.available_from,
             available_to: data.available_to,
-            amenities: data.amenities,
-            vehicle_type: data.vehicle_type,
-            handover_method: data.handover_method
+            rules: data.rules,
+            equipment: data.equipment
         })
         .eq('id', listingId)
 
@@ -477,7 +477,7 @@ export async function deleteListing(listingId: string) {
         .eq('listing_id', listingId)
 
     if (images && images.length > 0) {
-        const paths = images.map(img => img.storage_path)
+        const paths = images.map((img: { storage_path: string }) => img.storage_path)
         await supabase.storage.from('listings').remove(paths)
     }
 

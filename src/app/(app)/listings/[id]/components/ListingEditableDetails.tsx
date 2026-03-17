@@ -2,10 +2,12 @@
 
 import { useState } from 'react'
 import Image from 'next/image'
-import { Listing, AMENITY_OPTIONS } from '@/modules/listings/types'
+import { Listing, RULE_OPTIONS, EQUIPMENT_OPTIONS } from '@/modules/listings/types'
 import { ListingMap } from './ListingMap'
 import { updateListing, updateListingStatus, deleteListing } from '@/modules/listings/actions'
-import { Loader2, MapPin } from 'lucide-react'
+import Link from 'next/link'
+
+import { Loader2, MapPin, Calendar, Clock, ShieldCheck, CheckCircle2, User } from 'lucide-react'
 import { AvailabilityManager } from '@/modules/listings/components/AvailabilityManager'
 import { ReviewsDisplay } from '@/modules/reviews/components/ReviewsDisplay'
 import { Review } from '@/modules/reviews/types'
@@ -27,7 +29,6 @@ interface ListingEditableDetailsProps {
 }
 
 export function ListingEditableDetails({ listing, bookingForm, isOwner, bookedDates = [], reviews = [] }: ListingEditableDetailsProps) {
-    // ... state ...
     const [isEditing, setIsEditing] = useState(false)
     const [isSaving, setIsSaving] = useState(false)
     const [isDeleting, setIsDeleting] = useState(false)
@@ -42,7 +43,9 @@ export function ListingEditableDetails({ listing, bookingForm, isOwner, bookedDa
         cancellation_policy_days: listing.cancellation_policy_days || 7,
         available_from: listing.available_from || null,
         available_to: listing.available_to || null,
-        amenities: listing.amenities || []
+        available_to: listing.available_to || null,
+        rules: listing.rules || [],
+        equipment: listing.equipment || []
     })
 
     const [viewAsGuest, setViewAsGuest] = useState(false)
@@ -156,23 +159,31 @@ export function ListingEditableDetails({ listing, bookingForm, isOwner, bookedDa
 
                 <div className="mt-8 grid grid-cols-1 gap-x-8 gap-y-8 lg:grid-cols-3">
                     <div className="lg:col-span-2 space-y-8">
-                        {/* Host Info */}
-                        <div className="flex items-center gap-4 py-4 border-b border-gray-100 dark:border-zinc-800">
-                            <div className="h-12 w-12 rounded-full bg-gray-200 overflow-hidden relative">
-                                <Image
-                                    src={listing.host?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${listing.host_id}`}
-                                    alt="Host"
-                                    fill
-                                    className="object-cover"
-                                />
-                            </div>
-                            <div>
-                                <h3 className="font-semibold text-gray-900 dark:text-white">
-                                    Host: {listing.host?.email ? listing.host.email.split('@')[0] : 'Usuario'}
-                                </h3>
-                                <p className="text-sm text-gray-500">
-                                    Se unió en {listing.host?.created_at ? new Date(listing.host.created_at).getFullYear() : '2024'}
-                                </p>
+                        {/* Compact Host Card */}
+                        <div className="py-6 border-b border-gray-100 dark:border-zinc-800">
+                            <div className="flex items-center justify-between p-4 rounded-2xl bg-gray-50 dark:bg-zinc-800/40 border border-gray-100 dark:border-zinc-800">
+                                <Link 
+                                    href={`/hosts/${listing.host_id}`}
+                                    className="flex items-center gap-4 group"
+                                >
+                                    <div className="h-12 w-12 rounded-full bg-gray-200 overflow-hidden relative ring-2 ring-white dark:ring-zinc-700 shadow-sm transition-transform group-hover:scale-105">
+                                        <Image
+                                            src={listing.host?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${listing.host_id}`}
+                                            alt="Host"
+                                            fill
+                                            className="object-cover"
+                                        />
+                                    </div>
+                                    <div>
+                                        <div className="flex items-center gap-1.5">
+                                            <p className="font-bold text-gray-900 dark:text-white group-hover:underline">
+                                                Anfitrión: {listing.host?.email ? listing.host.email.split('@')[0] : 'Usuario'}
+                                            </p>
+                                            <ShieldCheck className="h-4 w-4 text-blue-500" />
+                                        </div>
+                                        <p className="text-xs text-gray-500 dark:text-gray-400">Ver perfil completo</p>
+                                    </div>
+                                </Link>
                             </div>
                         </div>
 
@@ -183,16 +194,40 @@ export function ListingEditableDetails({ listing, bookingForm, isOwner, bookedDa
                             </p>
                         </div>
 
-                        {/* Amenities */}
+                        {/* Equipment */}
                         <div>
-                            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Lo que ofrece este vehículo</h2>
-                            <div className="grid grid-cols-2 gap-4">
-                                {(listing.amenities?.length ? listing.amenities : ['kitchen', 'shower', 'pets']).map(amenityId => {
-                                    const amenity = AMENITY_OPTIONS.find(a => a.id === amenityId)
-                                    if (!amenity) return null
+                            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Equipamiento incluido</h2>
+                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-y-4 gap-x-2">
+                                {(listing.equipment?.length ? listing.equipment : ['bedding', 'kitchen_kit']).map(eqId => {
+                                    const eq = EQUIPMENT_OPTIONS.find(e => e.id === eqId)
+                                    if (!eq) return null
                                     return (
-                                        <div key={amenityId} className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
-                                            <span>{amenity.icon} {amenity.label}</span>
+                                        <div key={eqId} className="flex items-center gap-2 p-3 rounded-xl bg-gray-50 dark:bg-zinc-900/50 border border-gray-100 dark:border-zinc-800">
+                                            <span className="text-xl">{eq.icon}</span>
+                                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{eq.label}</span>
+                                        </div>
+                                    )
+                                })}
+                            </div>
+                        </div>
+
+                        {/* Rules - "What you need to know" */}
+                        <div className="p-8 rounded-3xl bg-orange-50/40 dark:bg-orange-950/20 border border-orange-100 dark:border-orange-900/30">
+                            <h2 className="text-2xl font-black text-gray-900 dark:text-white mb-6 flex items-center gap-3">
+                                <Clock className="h-6 w-6 text-orange-600" />
+                                Lo que debes saber
+                            </h2>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                {(listing.rules?.length ? listing.rules : ['age_25']).map(ruleId => {
+                                    const rule = RULE_OPTIONS.find(r => r.id === ruleId)
+                                    if (!rule) return null
+                                    return (
+                                        <div key={ruleId} className="flex items-start gap-4">
+                                            <span className="text-2xl mt-1">{rule.icon}</span>
+                                            <div>
+                                                <p className="text-md font-bold text-gray-900 dark:text-white leading-tight">{rule.label}</p>
+                                                <p className="text-sm text-gray-500 mt-1">Consulta con el anfitrión si tienes dudas</p>
+                                            </div>
                                         </div>
                                     )
                                 })}
@@ -384,30 +419,34 @@ export function ListingEditableDetails({ listing, bookingForm, isOwner, bookedDa
                     />
                 </div>
 
+                <div className="my-6 border-t border-gray-100 dark:border-zinc-800"></div>
+
+                <div className="my-6 border-t border-gray-100 dark:border-zinc-800"></div>
+
                 <div>
-                    <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Comodidades</h3>
+                    <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4italic">Equipamiento</h3>
                     <div className="grid grid-cols-2 gap-4">
-                        {AMENITY_OPTIONS.map((amenity) => {
-                            const isSelected = formData.amenities?.includes(amenity.id)
+                        {EQUIPMENT_OPTIONS.map((opt) => {
+                            const isSelected = formData.equipment?.includes(opt.id)
                             return (
-                                <label key={amenity.id} className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-zinc-800 dark:border-zinc-700 transition-colors">
+                                <label key={opt.id} className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-zinc-800 dark:border-zinc-700 transition-colors">
                                     <input
                                         type="checkbox"
                                         checked={isSelected}
                                         onChange={(e) => {
-                                            const current = formData.amenities || []
+                                            const current = formData.equipment || []
                                             let next
                                             if (e.target.checked) {
-                                                next = [...current, amenity.id]
+                                                next = [...current, opt.id]
                                             } else {
-                                                next = current.filter(id => id !== amenity.id)
+                                                next = current.filter(id => id !== opt.id)
                                             }
-                                            setFormData({ ...formData, amenities: next })
+                                            setFormData({ ...formData, equipment: next })
                                         }}
                                         className="h-4 w-4 rounded border-gray-300 text-black focus:ring-black"
                                     />
                                     <span className="text-gray-700 dark:text-gray-300">
-                                        {amenity.icon} {amenity.label}
+                                        {opt.icon} {opt.label}
                                     </span>
                                 </label>
                             )
@@ -415,8 +454,63 @@ export function ListingEditableDetails({ listing, bookingForm, isOwner, bookedDa
                     </div>
                 </div>
 
+                <div className="my-6 border-t border-gray-100 dark:border-zinc-800"></div>
+
+                <div>
+                    <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Reglas</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                        {RULE_OPTIONS.map((opt) => {
+                            const isSelected = formData.rules?.includes(opt.id)
+                            return (
+                                <label key={opt.id} className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-zinc-800 dark:border-zinc-700 transition-colors">
+                                    <input
+                                        type="checkbox"
+                                        checked={isSelected}
+                                        onChange={(e) => {
+                                            const current = formData.rules || []
+                                            let next
+                                            if (e.target.checked) {
+                                                next = [...current, opt.id]
+                                            } else {
+                                                next = current.filter(id => id !== opt.id)
+                                            }
+                                            setFormData({ ...formData, rules: next })
+                                        }}
+                                        className="h-4 w-4 rounded border-gray-300 text-black focus:ring-black"
+                                    />
+                                    <span className="text-gray-700 dark:text-gray-300">
+                                        {opt.icon} {opt.label}
+                                    </span>
+                                </label>
+                            )
+                        })}
+                    </div>
+                </div>
+
+                <div className="my-6 border-t border-gray-100 dark:border-zinc-800"></div>
+
+                <div className="my-6 border-t border-gray-100 dark:border-zinc-800"></div>
+
                 <div className="pt-8 border-t border-gray-200 dark:border-zinc-800">
                     <AvailabilityManager listingId={listing.id} availability={bookedDates} />
+                </div>
+
+                <div className="pt-8 border-t border-gray-200 dark:border-zinc-800 flex justify-end gap-3">
+                    <button
+                        onClick={() => setIsEditing(false)}
+                        className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg font-medium dark:text-gray-300 dark:hover:bg-zinc-800"
+                        disabled={isSaving}
+                    >
+                        Salir
+                    </button>
+                    <button
+                        onClick={handleSave}
+                        disabled={isSaving}
+                        className="bg-black text-white px-8 py-3 rounded-xl font-bold hover:bg-gray-800 dark:bg-white dark:text-black dark:hover:bg-gray-200 flex items-center gap-2 shadow-lg hover:shadow-xl transition-all"
+                    >
+                        {isSaving && <Loader2 className="h-4 w-4 animate-spin" />}
+                        Guardar Todos los Cambios
+                    </button>
                 </div>
             </div>
         </div>
