@@ -128,13 +128,14 @@ export async function getListingById(id: string): Promise<Listing | null> {
     return data as Listing
 }
 
-export async function getHostListings(hostId: string): Promise<Listing[]> {
+export async function getListingsByHost(hostId: string): Promise<Listing[]> {
     const supabase = await createClient()
 
     const { data, error } = await supabase
         .from('listings')
         .select('*')
         .eq('host_id', hostId)
+        .eq('status', 'published') // Only show published listings on public profile
         .order('created_at', { ascending: false })
 
     if (error) {

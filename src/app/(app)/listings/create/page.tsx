@@ -10,6 +10,16 @@ export default async function CreateListingPage() {
 
     if (!user) redirect('/login')
 
+    const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single()
+
+    if (profile?.role !== 'host') {
+        redirect('/profile')
+    }
+
     const approvedVans = await getApprovedVans(user.id)
 
     if (approvedVans.length === 0) {
