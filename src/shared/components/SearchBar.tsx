@@ -63,16 +63,6 @@ export function SearchBar() {
         }
     }, [googleLoaded])
 
-    // Handle clicking outside to close active tab
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (searchContainerRef.current && !searchContainerRef.current.contains(event.target as Node)) {
-                setActiveTab(null)
-            }
-        }
-        document.addEventListener('mousedown', handleClickOutside)
-        return () => document.removeEventListener('mousedown', handleClickOutside)
-    }, [])
 
     const searchLocation = async (text: string) => {
         setLocationInput(text)
