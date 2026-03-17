@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Image from 'next/image'
-import { Listing, RULE_OPTIONS, EQUIPMENT_OPTIONS } from '@/modules/listings/types'
+import { Listing, RULE_OPTIONS, EQUIPMENT_OPTIONS, BOOKING_TYPE_OPTIONS } from '@/modules/listings/types'
 import { ListingMap } from './ListingMap'
 import { updateListing, updateListingStatus, deleteListing } from '@/modules/listings/actions'
 import Link from 'next/link'
@@ -44,7 +44,8 @@ export function ListingEditableDetails({ listing, bookingForm, isOwner, bookedDa
         available_from: listing.available_from || null,
         available_to: listing.available_to || null,
         rules: listing.rules || [],
-        equipment: listing.equipment || []
+        equipment: listing.equipment || [],
+        booking_type: listing.booking_type || 'request'
     })
 
     const [viewAsGuest, setViewAsGuest] = useState(false)
@@ -145,6 +146,12 @@ export function ListingEditableDetails({ listing, bookingForm, isOwner, bookedDa
                             {listing.location}
                         </p>
                     </div>
+                    {listing.booking_type === 'instant' && (
+                        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 rounded-full border border-yellow-200 dark:border-yellow-800/50">
+                            <CheckCircle2 className="h-4 w-4" />
+                            <span className="text-xs font-bold uppercase tracking-wider">Reserva Inmediata</span>
+                        </div>
+                    )}
                 </div>
 
                 {/* Gallery */}
@@ -416,6 +423,34 @@ export function ListingEditableDetails({ listing, bookingForm, isOwner, bookedDa
                         onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                         className="w-full rounded-lg border border-gray-300 px-3 py-2 dark:bg-zinc-800 dark:border-zinc-700 dark:text-white"
                     />
+                </div>
+
+                <div className="my-6 border-t border-gray-100 dark:border-zinc-800"></div>
+
+                <div>
+                    <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Tipo de Reserva</h3>
+                    <div className="flex flex-col gap-3">
+                        {BOOKING_TYPE_OPTIONS.map((opt) => (
+                            <label key={opt.id} className={`flex items-center gap-4 p-4 border rounded-xl cursor-pointer transition-all ${formData.booking_type === opt.id ? 'border-black bg-gray-50 dark:border-white dark:bg-zinc-800' : 'border-gray-200 dark:border-zinc-800 hover:bg-gray-50 dark:hover:bg-zinc-800/50'}`}>
+                                <input
+                                    type="radio"
+                                    name="booking_type"
+                                    value={opt.id}
+                                    checked={formData.booking_type === opt.id}
+                                    onChange={() => setFormData({ ...formData, booking_type: opt.id as 'instant' | 'request' })}
+                                    className="h-4 w-4 text-black focus:ring-black border-gray-300"
+                                />
+                                <div className="flex flex-col">
+                                    <span className="font-bold text-gray-900 dark:text-white">{opt.icon} {opt.label}</span>
+                                    <span className="text-sm text-gray-500 dark:text-gray-400">
+                                        {opt.id === 'instant' 
+                                            ? 'Las reservas se confirman automáticamente.' 
+                                            : 'Debes aprobar cada solicitud manualmente.'}
+                                    </span>
+                                </div>
+                            </label>
+                        ))}
+                    </div>
                 </div>
 
                 <div className="my-6 border-t border-gray-100 dark:border-zinc-800"></div>

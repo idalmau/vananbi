@@ -12,7 +12,7 @@ const initialState = {
 
 
 import { Van } from '@/modules/vans/types'
-import { VEHICLE_TYPE_OPTIONS, HANDOVER_METHOD_OPTIONS, RULE_OPTIONS, EQUIPMENT_OPTIONS } from '@/modules/listings/types'
+import { VEHICLE_TYPE_OPTIONS, HANDOVER_METHOD_OPTIONS, RULE_OPTIONS, EQUIPMENT_OPTIONS, BOOKING_TYPE_OPTIONS } from '@/modules/listings/types'
 
 export function CreateListingForm({ vans }: { vans: Pick<Van, 'id' | 'make' | 'model' | 'license_plate'>[] }) {
     const [previews, setPreviews] = useState<string[]>([])
@@ -225,6 +225,31 @@ export function CreateListingForm({ vans }: { vans: Pick<Van, 'id' | 'make' | 'm
                                 <label key={opt.id} className="flex items-center gap-2 p-2 border border-gray-200 dark:border-zinc-800 rounded-lg hover:bg-gray-50 dark:hover:bg-zinc-800 cursor-pointer">
                                     <input type="checkbox" name="rules" value={opt.id} className="h-4 w-4 rounded border-gray-300 text-black focus:ring-black" />
                                     <span className="text-sm text-gray-700 dark:text-gray-200">{opt.icon} {opt.label}</span>
+                                </label>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="flex flex-col gap-2">
+                        <label className="text-sm font-medium text-gray-700 dark:text-gray-200">Tipo de Reserva</label>
+                        <div className="flex flex-col gap-2">
+                            {BOOKING_TYPE_OPTIONS.map(opt => (
+                                <label key={opt.id} className="flex items-center gap-3 p-3 border border-gray-200 dark:border-zinc-800 rounded-lg hover:bg-gray-50 dark:hover:bg-zinc-800 cursor-pointer">
+                                    <input 
+                                        type="radio" 
+                                        name="bookingType" 
+                                        value={opt.id} 
+                                        defaultChecked={opt.id === 'request'}
+                                        className="h-4 w-4 border-gray-300 text-black focus:ring-black" 
+                                    />
+                                    <div className="flex flex-col">
+                                        <span className="text-sm font-bold text-gray-900 dark:text-white">{opt.icon} {opt.label}</span>
+                                        <span className="text-xs text-gray-500">
+                                            {opt.id === 'instant' 
+                                                ? 'Las reservas se confirman automáticamente sin tu intervención.' 
+                                                : 'Debes revisar y confirmar cada solicitud de reserva personalmente.'}
+                                        </span>
+                                    </div>
                                 </label>
                             ))}
                         </div>

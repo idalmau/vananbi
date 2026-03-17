@@ -24,6 +24,7 @@ export async function createListing(prevState: any, formData: FormData) {
     const handoverMethod = (formData.get('handoverMethod') as string) || null
     const rules = formData.getAll('rules') as string[]
     const equipment = formData.getAll('equipment') as string[]
+    const bookingType = (formData.get('bookingType') as string) || 'request'
 
     // 3. Validate
     if (!title || !location || !price || !vanId) {
@@ -53,7 +54,8 @@ export async function createListing(prevState: any, formData: FormData) {
             status: 'draft', // Start as draft
             handover_method: handoverMethod,
             rules,
-            equipment
+            equipment,
+            booking_type: bookingType as 'instant' | 'request'
         })
         .select()
         .single()
@@ -126,6 +128,7 @@ export async function updateListing(listingId: string, data: {
     available_to?: string | null
     rules?: string[]
     equipment?: string[]
+    booking_type?: 'instant' | 'request'
 }) {
     const supabase = await createClient()
 
@@ -173,7 +176,8 @@ export async function updateListing(listingId: string, data: {
             available_from: data.available_from,
             available_to: data.available_to,
             rules: data.rules,
-            equipment: data.equipment
+            equipment: data.equipment,
+            booking_type: data.booking_type
         })
         .eq('id', listingId)
 

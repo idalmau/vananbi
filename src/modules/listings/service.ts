@@ -18,7 +18,8 @@ const MOCK_LISTINGS: Listing[] = [
         cancellation_policy_days: 7,
         available_from: null,
         available_to: null,
-        status: 'published'
+        status: 'published',
+        booking_type: 'request'
     },
     {
         id: '2',
@@ -34,7 +35,8 @@ const MOCK_LISTINGS: Listing[] = [
         cancellation_policy_days: 7,
         available_from: null,
         available_to: null,
-        status: 'published'
+        status: 'published',
+        booking_type: 'request'
     },
     {
         id: '3',
@@ -50,7 +52,8 @@ const MOCK_LISTINGS: Listing[] = [
         cancellation_policy_days: 7,
         available_from: null,
         available_to: null,
-        status: 'published'
+        status: 'published',
+        booking_type: 'request'
     }
 ]
 

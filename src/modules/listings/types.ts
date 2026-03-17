@@ -21,6 +21,7 @@ export type Listing = {
     handover_method?: HandoverMethod | null
     rules?: string[]
     equipment?: string[]
+    booking_type: 'instant' | 'request'
     created_at: string
     images?: ListingImage[]
     host?: {
@@ -81,6 +82,11 @@ export const EQUIPMENT_OPTIONS: Option[] = [
     { id: 'portable_toilet', label: 'WC Portátil (Potti)', icon: '🚽' },
     { id: 'camping_stove', label: 'Camping gas extra', icon: '🔥' },
     { id: 'leveling_blocks', label: 'Calzos niveladores', icon: '📐' },
+]
+
+export const BOOKING_TYPE_OPTIONS: Option[] = [
+    { id: 'request', label: 'Solicitud de reserva', icon: '📝' },
+    { id: 'instant', label: 'Reserva inmediata', icon: '⚡' },
 ]
 
 
