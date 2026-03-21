@@ -18,7 +18,8 @@ const MOCK_LISTINGS: Listing[] = [
         cancellation_policy_days: 7,
         available_from: null,
         available_to: null,
-        status: 'published'
+        status: 'published',
+        booking_type: 'request'
     },
     {
         id: '2',
@@ -34,7 +35,8 @@ const MOCK_LISTINGS: Listing[] = [
         cancellation_policy_days: 7,
         available_from: null,
         available_to: null,
-        status: 'published'
+        status: 'published',
+        booking_type: 'request'
     },
     {
         id: '3',
@@ -50,7 +52,8 @@ const MOCK_LISTINGS: Listing[] = [
         cancellation_policy_days: 7,
         available_from: null,
         available_to: null,
-        status: 'published'
+        status: 'published',
+        booking_type: 'request'
     }
 ]
 
@@ -128,13 +131,14 @@ export async function getListingById(id: string): Promise<Listing | null> {
     return data as Listing
 }
 
-export async function getHostListings(hostId: string): Promise<Listing[]> {
+export async function getListingsByHost(hostId: string): Promise<Listing[]> {
     const supabase = await createClient()
 
     const { data, error } = await supabase
         .from('listings')
         .select('*')
         .eq('host_id', hostId)
+        .eq('status', 'published') // Only show published listings on public profile
         .order('created_at', { ascending: false })
 
     if (error) {

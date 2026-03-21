@@ -31,3 +31,13 @@ create policy "Hosts can view payments for their listings" on public.payments
       and listings.host_id = auth.uid()
     )
   );
+
+-- Users can insert payments for their own bookings
+create policy "Users can insert own payments" on public.payments
+  for insert with check (
+    exists (
+      select 1 from public.bookings
+      where bookings.id = payments.booking_id
+      and bookings.user_id = auth.uid()
+    )
+  );

@@ -35,7 +35,7 @@ export async function createBooking(formData: FormData) {
     // Fetch Listing to verify price & get policy
     const { data: listing } = await supabase
         .from('listings')
-        .select('price_per_night, cancellation_policy_days, available_from, available_to')
+        .select('price_per_night, cancellation_policy_days, available_from, available_to, booking_type')
         .eq('id', listingId)
         .single()
 
@@ -97,13 +97,15 @@ export async function createBooking(formData: FormData) {
     // --- PAYMENT INTEGRATION END ---
 
     // Create Booking
+    const isInstant = listing.booking_type === 'instant'
+
     const { data, error } = await supabase.from('bookings').insert({
         user_id: user.id,
         listing_id: listingId,
         start_date: startDate,
         end_date: endDate,
         total_price: totalPrice,
-        status: 'pending', // Pending host approval
+        status: isInstant ? 'confirmed' : 'pending',
         payment_intent_id: payment.id, // Storing the mock ID
         cancellation_policy_snapshot: listing.cancellation_policy_days || 7
     }).select().single()
