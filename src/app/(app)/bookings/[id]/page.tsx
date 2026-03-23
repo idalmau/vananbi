@@ -3,6 +3,7 @@ import { createClient } from '@/shared/lib/supabase/server'
 import { BookingChat } from '@/modules/chat/components/BookingChat'
 import { BookingActions } from '@/modules/booking/components/BookingActions'
 import { CancelBookingButton } from '@/modules/booking/components/CancelBookingButton'
+import { PayBookingButton } from '@/modules/booking/components/PayBookingButton'
 import { ReviewButton } from '@/modules/reviews/components/ReviewButton'
 import Image from 'next/image'
 
@@ -22,6 +23,7 @@ export default async function BookingDetailsPage({ params, searchParams }: { par
         .from('bookings')
         .select(`
             *,
+            payments (*),
             listing:listings (
                 id, title, location, image_url, price_per_night, host_id,
                 host:profiles!listings_host_id_fkey (*)
@@ -43,6 +45,8 @@ export default async function BookingDetailsPage({ params, searchParams }: { par
     if (!isGuest && !isHost) {
         notFound() // Or redirect to 403
     }
+
+    const isPaid = booking.payments?.some((p: any) => p.status === 'succeeded')
 
     // Fetch Messages
     const { data: messages } = await supabase
@@ -146,7 +150,12 @@ export default async function BookingDetailsPage({ params, searchParams }: { par
 
                                             if (!isTooLate && booking.status === 'confirmed') {
                                                 return (
-                                                    <div className="flex flex-col items-end pt-4 gap-2">
+                                                    <div className="flex flex-col items-end pt-4 gap-2 w-full md:w-auto">
+                                                        {!isPaid && (
+                                                            <div className="w-full sm:w-64 mb-2">
+                                                                <PayBookingButton bookingId={booking.id} amount={booking.total_price} />
+                                                            </div>
+                                                        )}
                                                         {isPenalty && (
                                                             <span className="text-xs text-red-600 font-medium bg-red-50 px-2 py-1 rounded">
                                                                 ⚠️ Cancelación tardía: Se aplicará cargo completo.
