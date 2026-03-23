@@ -1,33 +1,25 @@
+import { stripe, createStripeAccount, createAccountSession } from '@/shared/lib/stripe'
+import { createClient } from '@/shared/lib/supabase/server'
 
-// TODO: Install stripe: `npm install stripe`
-// import Stripe from 'stripe'
+export async function createStripeHostAccount(userId: string, email: string) {
+    const supabase = await createClient()
 
-// TODO: Initialize Stripe
-// const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-//   apiVersion: '2023-10-16',
-// })
+    // 1. Create Stripe Custom Account
+    const account = await createStripeAccount(email, userId)
 
-export async function createPaymentIntent(amount: number, currency: string = 'eur') {
-    console.log(`[MOCK PAYMENT] Creating payment intent for ${amount} cents (${currency})`)
+    // 2. Save account_id to profile
+    const { error } = await supabase
+        .from('profiles')
+        .update({ stripe_account_id: account.id })
+        .eq('id', userId)
 
-    // TODO: Replace with real Stripe call
-    // const paymentIntent = await stripe.paymentIntents.create({
-    //   amount,
-    //   currency,
-    //   automatic_payment_methods: { enabled: true },
-    // })
+    if (error) throw new Error(error.message)
 
-    // Simulating a network delay
-    await new Promise(resolve => setTimeout(resolve, 500))
-
-    return {
-        id: `pi_mock_${Math.random().toString(36).substring(7)}_${Date.now()}`,
-        client_secret: 'mock_secret_key_for_client',
-        status: 'succeeded', // In a real flow, this would be 'requires_payment_method'
-    }
+    return account
 }
 
-export async function refundPayment(paymentIntentId: string) {
-    console.log(`[MOCK PAYMENT] Refunding payment ${paymentIntentId}`)
-    // TODO: Implement Stripe refund
+export async function generateAccountSession(stripeAccountId: string) {
+    const session = await createAccountSession(stripeAccountId)
+    return session.client_secret
 }
+
