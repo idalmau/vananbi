@@ -11,6 +11,11 @@ create table public.profiles (
   first_name text,
   last_name text,
   username text unique,
+  stripe_customer_id text,
+  stripe_account_id text,
+  onboarding_complete boolean default false,
+  stripe_requirements_due text[] default '{}'::text[],
+  payouts_enabled boolean default false,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 

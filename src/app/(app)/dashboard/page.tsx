@@ -8,6 +8,7 @@ import { getHostBookings } from '@/modules/booking/service'
 import { getListingsByHost } from '@/modules/listings/service'
 import { getHostMetrics } from '@/modules/booking/metrics'
 import { BookingActions } from '@/modules/booking/components/BookingActions'
+import { StripeConnectManager } from '@/modules/payments/components/StripeConnectManager'
 import { StatsCards } from './components/StatsCards'
 import { BookingTrends } from './components/BookingTrends'
 import { Pagination } from '@/shared/components/Pagination'
@@ -33,7 +34,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     const tabParam = resolvedParams.tab as string
 
     // Parsing params
-    const currentView = (['analytics', 'listings', 'vehicles', 'bookings'].includes(viewParam)) ? viewParam : 'analytics'
+    const currentView = (['analytics', 'listings', 'vehicles', 'bookings', 'payments'].includes(viewParam)) ? viewParam : 'analytics'
     const page = typeof pageParam === 'string' ? parseInt(pageParam) : 1
     const limit = typeof limitParam === 'string' ? parseInt(limitParam) : 10
     const sort = (typeof sortParam === 'string' && ['updated_at', 'created_at', 'start_date'].includes(sortParam)) ? sortParam as SortBy : 'updated_at'
@@ -41,6 +42,13 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
     const currentTab = (typeof tabParam === 'string' && ['active', 'drafts', 'past'].includes(tabParam)) ? tabParam : 'active'
 
     const isHost = user.user_metadata?.role === 'host'
+
+    // Fetch Profile for Stripe info
+    const { data: profile } = await supabase
+        .from('profiles')
+        .select('stripe_account_id, onboarding_complete, payouts_enabled, stripe_requirements_due')
+        .eq('id', user.id)
+        .single()
 
     // Data Fetching based on View
     const allHostListings = isHost ? await getListingsByHost(user.id) : []
@@ -107,6 +115,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
                                 { id: 'listings', name: 'Mis Anuncios' },
                                 { id: 'vehicles', name: 'Mis Vehículos' },
                                 { id: 'bookings', name: 'Reservas' },
+                                { id: 'payments', name: 'Pagos' },
                             ].map((tab) => {
                                 const isActive = currentView === tab.id
                                 return (
@@ -329,6 +338,33 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
                                             currentPage={page}
                                             baseUrl="/dashboard"
                                         />
+                                    </div>
+                                </section>
+                            )}
+
+                            {/* VIEW: PAYMENTS */}
+                            {currentView === 'payments' && (
+                                <section className="max-w-2xl animate-in fade-in duration-500">
+                                    <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-sm border border-gray-200 dark:border-zinc-800 p-8">
+                                        <div className="flex items-center gap-4 mb-6">
+                                            <div className="p-3 bg-blue-50 dark:bg-blue-900/30 rounded-full">
+                                                <svg className="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                                                </svg>
+                                            </div>
+                                            <div>
+                                                <h3 className="text-xl font-bold text-gray-900 dark:text-white">Configuración de Pagos</h3>
+                                                <p className="text-sm text-gray-500">Gestiona cómo recibes el dinero de tus reservas.</p>
+                                            </div>
+                                        </div>
+                                        <StripeConnectManager
+                                            hasStripeAccount={!!profile?.stripe_account_id}
+                                            hasRequirementsDue={(profile?.stripe_requirements_due?.length || 0) > 0}
+                                            payoutsEnabled={profile?.payouts_enabled || false}
+                                        />
+                                        <p className="text-[10px] text-gray-400 text-center uppercase tracking-widest pt-2">
+                                            Powered by Stripe
+                                        </p>
                                     </div>
                                 </section>
                             )}

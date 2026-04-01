@@ -35,7 +35,7 @@ export async function createBooking(formData: FormData) {
     // Fetch Listing to verify price & get policy
     const { data: listing } = await supabase
         .from('listings')
-        .select('price_per_night, cancellation_policy_days, available_from, available_to, booking_type')
+        .select('title, price_per_night, cancellation_policy_days, available_from, available_to, booking_type, host_id')
         .eq('id', listingId)
         .single()
 
@@ -44,7 +44,6 @@ export async function createBooking(formData: FormData) {
     }
 
     // Validate Availability Window
-    // available_from / available_to are inclusive
     if (listing.available_from && new Date(startDate) < new Date(listing.available_from)) {
         return { error: `Este vehículo solo está disponible a partir del ${new Date(listing.available_from).toLocaleDateString()}.` }
     }
@@ -52,84 +51,116 @@ export async function createBooking(formData: FormData) {
         return { error: `Este vehículo solo está disponible hasta el ${new Date(listing.available_to).toLocaleDateString()}.` }
     }
 
-    const pricePerNight = listing.price_per_night // Safe price from DB
+    const pricePerNight = listing.price_per_night
     const nights = getDaysCount(startDate, endDate)
     if (nights < 1) {
         return { error: 'La reserva debe ser de al menos 1 noche.' }
     }
     const totalPrice = nights * pricePerNight
 
-    // Optimistic approach: Try to insert. The DB Exclusion Constraint will fail if overlapping.
-    // Quick check:
-    const { data: existingBookings } = await supabase
-        .from('bookings')
-        .select('id')
-        .eq('listing_id', listingId)
-        .or(`start_date.lte.${endDate},end_date.gte.${startDate}`)
-    // This logic checks overlap: (StartA <= EndB) and (EndA >= StartB)
-
+    // Overlap check
     const { count } = await supabase
         .from('bookings')
         .select('*', { count: 'exact', head: true })
         .eq('listing_id', listingId)
         .filter('start_date', 'lt', endDate)
         .filter('end_date', 'gt', startDate)
-        .in('status', ['confirmed', 'pending']) // Assuming pending blocks too?
+        .in('status', ['confirmed', 'pending'])
 
     if (count && count > 0) {
         return { error: 'Estas fechas ya están reservadas.' }
     }
 
-
-
     // --- PAYMENT INTEGRATION START ---
-    // TODO: For a real flow, you might create the booking as 'pending' first, 
-    // then create a PaymentIntent, and confirm the booking via Webhook.
-    // Or create PaymentIntent on the client, and only create Booking on success.
-    // For this MVP, we simulate a successful server-side payment capture.
-
-    const { createPaymentIntent } = await import('@/modules/payments/service')
-    const payment = await createPaymentIntent(totalPrice)
-
-    if (!payment.id) {
-        return { error: 'Error al iniciar el pago.' }
-    }
-    // --- PAYMENT INTEGRATION END ---
-
-    // Create Booking
     const isInstant = listing.booking_type === 'instant'
 
-    const { data, error } = await supabase.from('bookings').insert({
+    // 1. Fetch host's Stripe account ONLY if instant
+    if (isInstant) {
+        const { data: hostProfile } = await supabase
+            .from('profiles')
+            .select('stripe_account_id, onboarding_complete')
+            .eq('id', listing.host_id)
+            .single()
+
+        if (!hostProfile?.stripe_account_id || !hostProfile?.onboarding_complete) {
+            return { error: 'El anfitrión aún no ha configurado sus pagos. Inténtalo más tarde.' }
+        }
+    }
+
+    // 1.5 Get or Create Stripe Customer for Guest
+    const { stripe } = await import('@/shared/lib/stripe')
+    const { data: guestProfile } = await supabase
+        .from('profiles')
+        .select('stripe_customer_id')
+        .eq('id', user.id)
+        .single()
+    
+    let stripeCustomerId = guestProfile?.stripe_customer_id
+    if (!stripeCustomerId) {
+        try {
+            const customer = await stripe.customers.create({
+                email: user.email || undefined,
+            })
+            stripeCustomerId = customer.id
+            await supabase.from('profiles').update({ stripe_customer_id: stripeCustomerId }).eq('id', user.id)
+        } catch (err: any) {
+            console.error('Failed to create stripe customer', err)
+            return { error: 'Error al iniciar sistema de pago.' }
+        }
+    }
+
+    // 2. Create Booking record
+    const origin = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+
+    const { data: booking, error: insertError } = await supabase.from('bookings').insert({
         user_id: user.id,
         listing_id: listingId,
         start_date: startDate,
         end_date: endDate,
         total_price: totalPrice,
         status: isInstant ? 'confirmed' : 'pending',
-        payment_intent_id: payment.id, // Storing the mock ID
         cancellation_policy_snapshot: listing.cancellation_policy_days || 7
     }).select().single()
 
-    if (error) {
-        console.error('Booking error:', error)
+    if (insertError) {
+        console.error('Booking error:', insertError)
         return { error: 'Error al procesar la reserva.' }
     }
 
-    // Record Payment
-    const { error: paymentError } = await supabase.from('payments').insert({
-        booking_id: data.id,
-        amount: totalPrice,
-        status: 'succeeded',
-        stripe_payment_id: payment.id
-    })
+    if (isInstant) {
+        // 3. Create Stripe Checkout Session
+        const { createCheckoutSession } = await import('@/shared/lib/stripe')
+        
+        // Fractioned Payment Logic: 20% Deposit
+        const depositAmount = Math.round(totalPrice * 0.2)
+        const balanceAmount = totalPrice - depositAmount
 
-    if (paymentError) {
-        console.error('Error recording payment:', paymentError)
-        // In a real app, we might want to flag this for manual review
+        try {
+            const session = await createCheckoutSession({
+                amount: depositAmount,
+                listingTitle: listing.title,
+                bookingId: booking.id,
+                customerId: stripeCustomerId,
+                origin
+            })
+
+            // 4. Redirect to Stripe
+            if (session.url) {
+                redirect(session.url)
+            } else {
+                return { error: 'No se pudo generar el enlace de pago.' }
+            }
+        } catch (checkoutError: any) {
+            console.error('Stripe Checkout session error:', checkoutError)
+            await supabase.from('bookings').delete().eq('id', booking.id)
+            return { error: 'Error al iniciar el pago con Stripe.' }
+        }
+    } else {
+        // Just redirect to success page for request-to-book
+        revalidatePath('/dashboard')
+        redirect(`/bookings/success?id=${booking.id}`)
     }
-
-    revalidatePath('/dashboard')
-    redirect(`/bookings/success?id=${data.id}`)
+    // --- PAYMENT INTEGRATION END ---
 }
 
 export async function cancelBooking(bookingId: string) {
@@ -277,4 +308,95 @@ export async function rejectBooking(bookingId: string) {
 
     revalidatePath('/dashboard')
     return { success: true }
+}
+
+export async function payForBooking(bookingId: string) {
+    const supabase = await createClient()
+
+    // Authenticate
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
+        return { error: 'Debes iniciar sesión.' }
+    }
+
+    // Verify booking
+    const { data: booking, error: fetchError } = await supabase
+        .from('bookings')
+        .select(`
+            *,
+            listing:listings (
+                title, host_id
+            )
+        `)
+        .eq('id', bookingId)
+        .single()
+
+    if (fetchError || !booking) {
+        return { error: 'Reserva no encontrada.' }
+    }
+
+    if (booking.user_id !== user.id) {
+        return { error: 'No tienes permiso para pagar esta reserva.' }
+    }
+
+    if (booking.status !== 'confirmed') {
+        return { error: 'La reserva no está lista para el pago.' }
+    }
+
+    // Fetch host's Stripe account
+    const { data: hostProfile } = await supabase
+        .from('profiles')
+        .select('stripe_account_id, onboarding_complete')
+        .eq('id', booking.listing.host_id)
+        .single()
+
+    if (!hostProfile?.stripe_account_id || !hostProfile?.onboarding_complete) {
+        return { error: 'El anfitrión aún no ha completado su configuración de pagos. Por favor, avísale.' }
+    }
+
+    // 1.5 Get or Create Stripe Customer for Guest
+    const { stripe } = await import('@/shared/lib/stripe')
+    const { data: guestProfile } = await supabase
+        .from('profiles')
+        .select('stripe_customer_id')
+        .eq('id', user.id)
+        .single()
+    
+    let stripeCustomerId = guestProfile?.stripe_customer_id
+    if (!stripeCustomerId) {
+        try {
+            const customer = await stripe.customers.create({
+                email: user.email || undefined,
+            })
+            stripeCustomerId = customer.id
+            await supabase.from('profiles').update({ stripe_customer_id: stripeCustomerId }).eq('id', user.id)
+        } catch (err: any) {
+            console.error('Failed to create stripe customer', err)
+            return { error: 'Error al iniciar sistema de pago.' }
+        }
+    }
+
+    const origin = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+    const { createCheckoutSession } = await import('@/shared/lib/stripe')
+    
+    const depositAmount = Math.round(booking.total_price * 0.2)
+
+    try {
+        const session = await createCheckoutSession({
+            amount: depositAmount,
+            listingTitle: booking.listing.title,
+            bookingId: booking.id,
+            customerId: stripeCustomerId,
+            origin
+        })
+
+        if (session.url) {
+            redirect(session.url)
+        } else {
+            return { error: 'No se pudo generar el enlace de pago.' }
+        }
+    } catch (checkoutError: any) {
+        console.error('Stripe Checkout session error:', checkoutError)
+        return { error: 'Error al iniciar el pago con Stripe.' }
+    }
 }
