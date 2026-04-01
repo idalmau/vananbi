@@ -247,7 +247,8 @@ export function SearchBar() {
                         onSelect={(range) => {
                             setDate(range)
                             // If user selected both from and to, advance to guests
-                            if (range?.from && range?.to) {
+                            // Only advance if from and to are different dates
+                            if (range?.from && range?.to && range.from.getTime() !== range.to.getTime()) {
                                 setActiveTab('guests')
                             }
                         }}
